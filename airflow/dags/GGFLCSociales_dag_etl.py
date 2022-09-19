@@ -2,6 +2,15 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.dummy import DummyOperator
 
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 3,
+    'retry_delay': timedelta(minutes=5)
+}
+
 with DAG(
     'GGFLatinoamericanaCsSociales_dags',
     description='Dag para la Facultad Latinoamericana de Ciencias Sociales',
