@@ -13,15 +13,15 @@ from airflow.operators.dummy import DummyOperator
 
 # Functions to execute when using the DAGS, at this moment they are not called because the DummyOpertors do not allow it
 
-def extraction(university):
+def extraction():
     # Extraction of the required data from the university associated with the database
     pass
 
-def transformation(university):
+def transformation():
     # Processing of data associated with the university
     pass
 
-def load(university):
+def load():
     # data load corresponding to the university received as a parameter
     pass
 
