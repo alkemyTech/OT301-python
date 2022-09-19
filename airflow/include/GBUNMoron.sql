@@ -1,4 +1,5 @@
 -- Código de consulta para la universidad de Morón
+-- Alumnos inscriptos entre el 1/09/2020 y 1/02/2021
 
 SELECT 
 	fechaiscripccion as inscription_date,
