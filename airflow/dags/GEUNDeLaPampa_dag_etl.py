@@ -13,6 +13,7 @@ PARA: poder intentar nuevamente si la base de datos me produce un error
 Criterios de aceptación: 
 Configurar el retry para las tareas del DAG de la Universidad Nacional De La Pampa'''
 
+
 from datetime import timedelta, datetime
 
 from airflow import DAG
