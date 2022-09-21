@@ -23,10 +23,12 @@ from airflow.operators.dummy import DummyOperator
 # Declare the dag arguments
 default_args = {
     'owner': 'OT301',
+    'depends_on_past': False,
+    'email_on_failure': False,
+    'email_on_retry': False,
     'retries':5,
     'retry_delay': timedelta(minutes=5),
 }
-
 
 # Functions to execute when using the DAGS, at this moment they are not called because the DummyOpertors do not allow it
 
