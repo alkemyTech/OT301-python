@@ -28,4 +28,5 @@ with DAG(
     trans = DummyOperator(task_id='trans')  #Procesamiento de los datos con Pandas
     load = DummyOperator(task_id='load')    #Carga de los datos procesados
 
+
     extr >> trans >> load
