@@ -73,8 +73,6 @@ def load():
         logging.warning(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - load was not performed correctly")
 
 
-
-
 with DAG(
     'GEUNDeLaPampa_dag_etl',
     description='Dag etl Grupo E Universidad Nacional de La Pampa',

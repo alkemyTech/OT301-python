@@ -31,6 +31,7 @@ from airflow import DAG
 
 from airflow.operators.dummy import DummyOperator
 
+
 import logging
 
 # Declare the dag arguments
