@@ -2,7 +2,7 @@ from datetime import timedelta, datetime
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 
-#
+
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
@@ -13,10 +13,10 @@ default_args = {
 }
 
 with DAG(
-        'University_Of_Cinema',  # Dagger name
+        'Buenos_Aires_University',  # Dagger name
         default_args=default_args,  # This will automatically apply it to any operators bound to it
         description='ETL DAG for University H data',  # Dags description
-        start_date=datetime.now(),  # Dag boot date
+        start_date=datetime(2022, 9, 20),  # Dag boot date
         schedule=timedelta(hours=1),  # The dag is going to run every 1 hour
         catchup=False
 
