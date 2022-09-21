@@ -3,29 +3,29 @@ from airflow import DAG
 from airflow.operators.dummy import DummyOperator
 import logging
 
-# create logger
-logger = logging.getLogger("GGUJFKenedy_dag_etl")
+#create logger
+logger = logging.getLogger("dags_logging")
 logger.setLevel(logging.DEBUG)
 
-# console handler
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
+#console handler
+cons_handler = logging.StreamHandler()
+cons_handler.setLevel(logging.INFO)
 
-# create formatter
-log_formatter = logging.Formatter("%(asctime)s - %(name)s - %(message)s", "%Y-%m-%d")
+#create formatter
+log_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", "%Y-%m-%d")
 
-# add formatter to cons_hand
-console_handler.setFormatter(log_formatter)
+#add formatter to cons_hand
+cons_handler.setFormatter(log_formatter)
 
-# add cons_handler to logger
-logger.addHandler(console_handler)
+#add cons_handler to logger
+logger.addHandler(cons_handler)
 
-# messages examples
+#messages examples
 logger.debug("Dag_debugg")
 logger.info("Dag running normally")
 logger.warning("Warn message")
 logger.error("Problems running ETL")
-logger.critical("Had to break! Huge problems.")
+logger.critical("Had to break! Problems.")
 
 default_args = {
     'owner': 'airflow',
@@ -37,22 +37,19 @@ default_args = {
 }
 
 with DAG(
-    'GGFLatinoamericanaCsSociales_dags',
-    description='Dag for Facultad Latinoamericana de Ciencias Sociales',
+    'GGUJFKenedy_dag',
+    description='Dag para la Universidad JFKennedy',
     schedule_interval='%@hourly',
-    start_date=datetime(2022, 1, 1), # Random start_date, not asked in the tasks but not able to skip this argument as well.
+    start_date=datetime(2022, 1, 1),
+    default_args=default_args
 ) as dag:
-    task_1=DummyOperator(task_id='GGUJFKenedy_getting_data_from_database')
-    task_2=DummyOperator(task_id='GGUJFKenedy_proc_with_pandas')
-    task_3=DummyOperator(task_id='GGUJFKenedy_load_data_in_S3')
-
-# Using 'except logging.exception:' IS NOT a good practice in Python, specially for Debugg, but until we get to the part where we know 
-# exactly what DAGs are going to do, which tools we are going to need to make them work and what exceptions/errors we will have to deal 
-# with, or at least expect, this should work as a provisional 'tool' in order to complete the first scrum.
+    task_1=DummyOperator(task_id='GGUJFKenedy')
+    task_2=DummyOperator(task_id='Proc_with_Pandas')
+    task_3=DummyOperator(task_id='Load_data_in_S3')
 
 try:
     task_1
-    logger.info("Connection to database succesful!")
+    logger.info("Dag running normally")
 except logging.exception:
     logger.error("Problems connecting to database!")
 
