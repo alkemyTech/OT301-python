@@ -43,7 +43,7 @@ def load():
 
 
 with DAG(
-        'University_Of_Cinema',  # Dagger name
+        'Buenos_Aires_University',  # Dagger name
         default_args=default_args,  # This will automatically apply it to any operators bound to it
         description='ETL DAG for University H data',  # Dags description
         start_date=datetime(2022, 9, 20),  # Dag boot date
