@@ -11,7 +11,7 @@ default_args = {
     'email': ['ferduarte@live.com.ar'], 
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': '',                                #Configuracion de retries
+    'retries': 5,                                #Configuracion de retries
     'retry_delay': timedelta(minutes=5)
 }
 
