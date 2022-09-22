@@ -1,12 +1,7 @@
-'''COMO: Analista de datos
 QUIERO: Configurar un DAG, sin consultas, ni procesamiento
 PARA: Hacer un ETL para 2 universidades distintas.
 Criterios de aceptación: 
 Configurar el DAG para procese la Universidad Nacional De La Pampa
-Documentar los operators que se deberían utilizar a futuro, teniendo en cuenta que se va a hacer dos consultas SQL (una para cada universidad), se van a procesar los datos con pandas y se van a cargar los datos en S3.  El DAG se debe ejecutar cada 1 hora, todos los días.'''
-
-from datetime import timedelta, datetime
-
 from airflow import DAG
 
 from airflow.operators.dummy import DummyOperator
@@ -15,16 +10,6 @@ from airflow.operators.dummy import DummyOperator
 
 def extraction():
     # Extraction of the required data from the university associated with the database
-    pass
-
-def transformation():
-    # Processing of data associated with the university
-    pass
-
-def load():
-    # data load corresponding to the university received as a parameter
-    pass
-
 
 with DAG(
     'GEUNDeLaPampa_dag_etl',
