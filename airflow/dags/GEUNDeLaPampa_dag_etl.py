@@ -1,5 +1,6 @@
 '''COMO: Analista de Datos
 
+
 OT 301-25
 QUIERO: Configurar un DAG, sin consultas, ni procesamiento
 PARA: Hacer un ETL para 2 universidades distintas.
@@ -12,6 +13,7 @@ QUIERO: Configurar los retries con la conexión al a base de datos
 PARA: poder intentar nuevamente si la base de datos me produce un error
 Criterios de aceptación: 
 Configurar el retry para las tareas del DAG de la Universidad Nacional De La Pampa
+
 
 OT301-41
 QUIERO: Configurar los log 
@@ -32,6 +34,7 @@ from airflow import DAG
 from airflow.operators.dummy import DummyOperator
 
 import logging
+
 
 # Declare the dag arguments
 default_args = {
