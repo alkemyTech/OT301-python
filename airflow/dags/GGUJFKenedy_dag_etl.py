@@ -39,7 +39,7 @@ default_args = {
 with DAG(
     'GGUJFKenedy_dag',
     description='Dag para la Universidad JFKennedy',
-    schedule_interval='%@hourly',
+    schedule_interval=timedelta(hours=1),
     start_date=datetime(2022, 1, 1),
     default_args=default_args
 ) as dag:
