@@ -37,10 +37,11 @@ default_args = {
 }
 
 with DAG(
-    'GGFLatinoamericanaCsSociales_dags',
+    'GGFLCSociales_dag_',
     description='Dag para la Facultad Latinoamericana de Ciencias Sociales',
-    schedule_interval='%@hourly',
+    schedule_interval=timedelta(hours=1),
     start_date=datetime(2022, 1, 1),
+    default_args=default_args
 ) as dag:
     task_1=DummyOperator(task_id='GGFLatinoamericanaCsSociales')
     task_2=DummyOperator(task_id='Proc_with_Pandas')
