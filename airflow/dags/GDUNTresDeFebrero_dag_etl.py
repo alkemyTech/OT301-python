@@ -7,7 +7,10 @@ from airflow.operators.dummy_operator import DummyOperator
 
 default_args={
     'owner': 'Alkemy',
-    'start_date': datetime(2022, 9, 19)
+    'start_date': datetime(2022, 9, 19),
+    'retries': 5,
+    'retry_delay': timedelta(minutes=5)
+
 }
 
 with DAG(dag_id='UNTresDeFebrero_dag_etl',
