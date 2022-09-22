@@ -2,6 +2,7 @@ from datetime import datetime
 from datetime import timedelta
 import logging
 
+
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 
@@ -11,6 +12,7 @@ dag_name = 'UTN_dag_etl'
 logging.basicConfig(format=f'%(asctime)s - {dag_name} - %(message)s', datefmt='%Y-%m-%d', level=logging.INFO)
 
 # Configuración del DAG
+
 default_args={
     'owner': 'Alkemy',
     'start_date': datetime(2022, 9, 19),
@@ -19,6 +21,8 @@ default_args={
 }
 
 with DAG(dag_id=dag_name,
+
+
         description='Universidad Tecnolgogica Nacional proceso ETL',
         start_date=datetime(2022,9,19),
         schedule_interval=timedelta(hours=1),
