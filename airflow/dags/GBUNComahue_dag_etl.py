@@ -1,6 +1,5 @@
-#Dag de ETL para la Universidad Nacional Del Comahue
-
 #Importamos las librerias que utilizaremos
+
 from airflow import DAG
 from airflow.operators.dummy import DummyOperator
 from datetime import timedelta,datetime
@@ -27,6 +26,5 @@ with DAG(
     extr = DummyOperator(task_id='extr')    #Extracción de datos con sentencias sql
     trans = DummyOperator(task_id='trans')  #Procesamiento de los datos con Pandas
     load = DummyOperator(task_id='load')    #Carga de los datos procesados
-
 
     extr >> trans >> load
