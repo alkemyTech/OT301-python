@@ -1,7 +1,17 @@
 from datetime import timedelta, datetime
+import pathlib
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 import logging as log
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+from pathlib import Path
+import pandas as pd
+import os
+
+# sql files
+sql_folder = Path(__file__).resolve().parent.parent
+sql_path = f'{sql_folder}/include/'
+
 
 # We configure the registers
 log.basicConfig(
@@ -25,8 +35,28 @@ def extract():
     """
     Function that is responsible for extracting the data, from the include folder of the group h
     """
-    print('Extraction')
+    file = 'GHUNDeBuenosAires'
 
+
+    # Read the sql query, which is in the include folder
+    logger.info(f'Reading file {file}.sql')
+    with open(f'{sql_path}{file}.sql', 'r') as f:
+        query = f.read()
+        f.close()
+    
+    hook = PostgresHook(postgres_conn_id= 'alkemy_db')
+
+    # Execute query
+    log.info(f'Execute query {file}.sql')
+    pandas_df = hook.get_pandas_df(query)
+    
+    # Save it as csv
+    log.info(f'Saving data in {file}.csv')
+    csv_path = f'{sql_folder}/files/{file}.csv'
+    pandas_df.to_csv(csv_path, sep = ',', index = False)
+
+    log.info('Extraction finished')
+   
 
 def transform():
     """
@@ -47,7 +77,7 @@ with DAG(
         default_args=default_args,  # This will automatically apply it to any operators bound to it
         description='ETL DAG for University H data',  # Dags description
         start_date=datetime(2022, 9, 20),  # Dag boot date
-        schedule_interval=timedelta(hours=1),  # The dag is going to run every 1 hour
+        schedule=timedelta(hours=1),  # The dag is going to run every 1 hour
         catchup=False
 
 ) as dag:
@@ -71,3 +101,6 @@ with DAG(
     )
 
 t1 >> t2 >> t3
+
+if __name__ == '__main__':
+    extract()
