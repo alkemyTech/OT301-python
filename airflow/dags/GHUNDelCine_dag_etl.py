@@ -2,6 +2,12 @@ from datetime import timedelta, datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 import logging as log
+from pathlib import Path
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+
+sql_folder = Path(__file__).resolve().parent.parent
+sql_path = f'{sql_folder}/include/'
+
 
 # We configure the registers
 log.basicConfig(
@@ -25,7 +31,27 @@ def extract():
     """
     Function that is responsible for extracting the data, from the include folder of the group h
     """
-    print('Extraction')
+    file = 'GHUNDelCine'
+
+
+    # Read the sql query, which is in the include folder
+    logger.info(f'Reading file {file}.sql')
+    with open(f'{sql_path}/{file}.sql', 'r') as f:
+        query = f.read()
+        f.close()
+    
+    hook = PostgresHook(postgres_conn_id= 'alkemy_db')
+
+    # Execute query
+    log.info(f'Execute query {file}.sql')
+    pandas_df = hook.get_pandas_df(query)
+    
+    # Save it as csv
+    log.info(f'Saving data in {file}.csv')
+    csv_path = f'{sql_folder}/files/{file}.csv'
+    pandas_df.to_csv(csv_path, sep = ',', index = False)
+
+    log.info('Extraction finished')
 
 
 def transform():
@@ -71,3 +97,4 @@ with DAG(
     )
 
 t1 >> t2 >> t3
+

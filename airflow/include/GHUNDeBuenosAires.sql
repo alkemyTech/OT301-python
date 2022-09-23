@@ -1,9 +1,12 @@
 SELECT
 	universidades AS university,
 	carrerAS AS career,
+	0 as first_name,
+	nombres as last_name,
 	to_date(fechas_de_inscripcion, 'yy-mon-dd') AS inscription_date,
 	sexo AS gender,
-	DATE_PART('year', AGE(current_date ,TO_DATE(fechas_nacimiento, 'YY-Mon-DD'))) AS age,
+	--DATE_PART('year', AGE(current_date ,TO_DATE(fechas_nacimiento, 'YY-Mon-DD'))) AS age,
+	0 as age,
 	codigos_postales AS postal_code,
 	direcciones AS location,
 	emails AS email
