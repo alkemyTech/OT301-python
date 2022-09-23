@@ -1,8 +1,8 @@
 from datetime import timedelta, datetime
 from airflow import DAG
-
+from airflow.operators.dummy import DummyOperator
 #Se utilizara PythonOperator para ejecutar las funciones de extraccion, transformacion y carga. 
-from airflow.operators.python import PythonOperator
+#from airflow.operators.python import PythonOperator
 import logging 
 
 default_args = {
@@ -11,7 +11,7 @@ default_args = {
     'email': ['ferduarte@live.com.ar'], 
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': '',                                #Configuracion de retries
+    'retries': 5,                                #Configuracion de retries
     'retry_delay': timedelta(minutes=5)
 }
 
@@ -28,15 +28,14 @@ with DAG(
     default_args= default_args,
     description= 'ETL Universidad Jujuy',
     schedule_interval= timedelta (hours=1),       #Configuracion intervalo de ejecucion
-    start_date= datetime(2022-9-20), 
-    catchup=False,
-    template_searchpath='''direccion de extraccion sqls''', 
+    start_date= datetime.fromisoformat('2022-09-20'), 
+    catchup=False
     ) as dag:
     
     #Ejecucion de tareas
-    extraccion_task = ""
-    transformacion_task = ""
-    cargando_task = ""
+    extraccion_task = DummyOperator(task_id='extraccion')
+    transformacion_task = DummyOperator(task_id='transformacion')
+    cargando_task = DummyOperator(task_id='cargando')
     
     
     extraccion_task >> transformacion_task >> cargando_task
