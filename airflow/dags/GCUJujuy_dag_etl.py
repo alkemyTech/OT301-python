@@ -24,9 +24,9 @@ def cargando():
     logging.info("Guardando datos")   
     
 with DAG(
-    'GCUPalermo_dag_etl.py',
+    'GCUJujuy_dag_etl.py',
     default_args= default_args,
-    description= 'ETL Universidad Palermo',
+    description= 'ETL Universidad Jujuy',
     schedule_interval= timedelta (hours=1),       #Configuracion intervalo de ejecucion
     start_date= datetime.fromisoformat('2022-09-20'), 
     catchup=False
