@@ -1,8 +1,8 @@
 from datetime import timedelta, datetime
 from airflow import DAG
-
+from airflow.operators.dummy import DummyOperator
 #Se utilizara PythonOperator para ejecutar las funciones de extraccion, transformacion y carga. 
-from airflow.operators.python import PythonOperator
+#from airflow.operators.python import PythonOperator
 import logging 
 
 default_args = {
@@ -32,10 +32,10 @@ with DAG(
     catchup=False
     ) as dag:
     
-    #Ejecucion de tareas
-    extraccion_task = PythonOperator(task_id= 'extraccion', python_callable= extraccion) 
-    transformacion_task = PythonOperator(task_id= 'transformacion', python_callable= transformacion)
-    cargando_task = PythonOperator(task_id= 'cargando', python_callable= cargando)
+#Ejecucion de tareas
+    extraccion_task = DummyOperator(task_id='extraccion')
+    transformacion_task = DummyOperator(task_id='transformacion')
+    cargando_task = DummyOperator(task_id='cargando')
     
     
     extraccion_task >> transformacion_task >> cargando_task
