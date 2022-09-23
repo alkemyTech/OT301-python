@@ -28,9 +28,8 @@ with DAG(
     default_args= default_args,
     description= 'ETL Universidad Palermo',
     schedule_interval= timedelta (hours=1),       #Configuracion intervalo de ejecucion
-    start_date= datetime(2022-9-20), 
-    catchup=False,
-    template_searchpath='''direccion de extraccion sqls''', 
+    start_date= datetime.fromisoformat('2022-09-20'), 
+    catchup=False
     ) as dag:
     
     #Ejecucion de tareas
