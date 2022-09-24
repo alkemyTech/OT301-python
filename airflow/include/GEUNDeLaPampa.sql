@@ -11,7 +11,7 @@ SELECT
 	null as age,
 	codgoposstal as postal_code,
 	null as location,
-	eemail as email,
+	eemail as email
 FROM 
 	public.moron_nacional_pampa
 WHERE
