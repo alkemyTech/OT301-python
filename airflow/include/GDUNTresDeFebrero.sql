@@ -15,4 +15,4 @@ from
 
 where
 	universidad = 'universidad_nacional_de_tres_de_febrero' and
-	cast (fecha_de_inscripcion as date) between '2020-09-01' and '2021-02-01';
+	cast (fecha_de_inscripcion as date) between '2020-09-01' and '2021-02-01'
