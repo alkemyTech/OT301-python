@@ -117,7 +117,13 @@ with DAG(
         dag=dag,
         python_callable=extraction
     )
-    transformation = DummyOperator(task_id='transformation')
+    
+    transformation = PythonOperator(
+        task_id='transformation',
+        dag=dag,
+        python_callable=transformation
+    )
+    
     load = DummyOperator(task_id='load')
 
 
