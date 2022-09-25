@@ -41,9 +41,12 @@ print('include_directory',include_path)
 datasets_path=airflow_path+'/datasets/'
 print(datasets_path)
 
-reading_query= open(include_path+'GGUJFKenedy.sql','r')
-sql_query = reading_query.read()
-reading_query.close
+try:
+  reading_query= open(include_path+'GGUJFKenedy.sql','r')
+  sql_query = reading_query.read()
+  reading_query.close
+except FileNotFoundError:
+  logging.error('Could not find .sql file.')
 
 default_args = {
     'owner': 'airflow',
