@@ -39,6 +39,10 @@ def extract():
     except:
         logging.warning('Data base - Connection failed')
 
+#Defino la función que procesara los datos de la universidad
+def transform():
+    pass
+
 with DAG(
     'GBUSalvador_dag_etl',
     description = 'ETL para la Universidad Del Salvador',
@@ -48,7 +52,7 @@ with DAG(
     template_searchpath=path_dags.replace('/dags','/include')
 ) as dag:
     extract_task = PythonOperator(task_id='extr',python_callable=extract) #Extracción de datos
-    trans = DummyOperator(task_id='trans')  #Procesamiento de los datos con Pandas
+    transform_task = PythonOperator(task_id='trans',python_callable=transform)  #Procesamiento con Pandas
     load = DummyOperator(task_id='load')    #Carga de los datos procesados
 
-    extract_task >> trans >> load
+    extract_task >> transform_task >> load
