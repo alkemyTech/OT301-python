@@ -29,7 +29,13 @@ QUIERO: Implementar SQL Operator
 PARA: tomar los datos de las bases de datos en el DAG
 Criterios de aceptación: 
 Configurar un Python Operators, para que extraiga información de la base de datos utilizando el .sql disponible en el repositorio base de la Universidad Abierta Interamericana
-Dejar la información en un archivo .csv dentro de la carpeta datasets.'''
+Dejar la información en un archivo .csv dentro de la carpeta datasets.
+
+OT301-57
+QUIERO: Implementar el Python Operator
+PARA: procesar los datos obtenidos de la base de datos dentro del DAG
+Criterios de aceptación: 
+Configurar el Python Operator para que ejecute la función que procese los datos para la Universidad Abierta Interamericana'''
 
 from datetime import timedelta, datetime, date
 
