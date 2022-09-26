@@ -33,6 +33,7 @@ with DAG(
     ) as dag:
     
 #Ejecucion de tareas
+
     extraccion_task = DummyOperator(task_id='extraccion')
     transformacion_task = DummyOperator(task_id='transformacion')
     cargando_task = DummyOperator(task_id='cargando')
