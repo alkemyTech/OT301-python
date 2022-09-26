@@ -47,6 +47,8 @@ import logging
 
 from pathlib import Path
 
+from os import remove
+
 # Declare the dag arguments
 
 default_args = {
@@ -77,8 +79,14 @@ def extraction():
         # execution of the query to save in a pandas dataframe
         df = hook.get_pandas_df(query)
 
+        # If it exists, I delete the file generated previously to update the information.
+        try:
+            remove(f'{airflow_folder}/files/{university}_select.csv')
+        except:
+            pass
+
         # export to a .csv file in the folder suggested in the issue
-        df.to_csv(f'{airflow_folder}/datasets/{university}_select.csv',sep=';')
+        df.to_csv(f'{airflow_folder}/files/{university}_select.csv',sep=';')
 
         logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - extraction done successfully")
 
