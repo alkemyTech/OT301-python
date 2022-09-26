@@ -34,7 +34,7 @@ def extract():
         pg_hook = PostgresHook(postgres_conn_id='alkemy_db')
         df_data = pg_hook.get_pandas_df(sql=query)
         logging.info('Exporting query to file')
-        df_data.to_csv(path_dags.replace('/dags',f'/datasets/{name_un}_select.csv'))
+        df_data.to_csv(path_dags.replace('/dags',f'/files/{name_un}_select.csv'))
         logging.info('Exporting finished')
     except:
         logging.warning('Data base - Connection failed')
