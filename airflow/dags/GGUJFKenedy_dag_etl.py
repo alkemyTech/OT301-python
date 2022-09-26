@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from turtle import end_fill
 from airflow import DAG
 from airflow.operators.dummy import DummyOperator
 import logging
@@ -38,10 +37,11 @@ default_args = {
 }
 
 with DAG(
-    'GGFLatinoamericanaCsSociales_dags',
-    description='Dag para la Facultad Latinoamericana de Ciencias Sociales',
-    schedule_interval='%@hourly',
+    'GGUJFKenedy_dag',
+    description='Dag para la Universidad JFKennedy',
+    schedule_interval=timedelta(hours=1),
     start_date=datetime(2022, 1, 1),
+    default_args=default_args
 ) as dag:
     task_1=DummyOperator(task_id='GGUJFKenedy')
     task_2=DummyOperator(task_id='Proc_with_Pandas')
