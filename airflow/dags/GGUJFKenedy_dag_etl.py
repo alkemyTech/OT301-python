@@ -2,10 +2,10 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.providers.postgres.operators.postgres import PostgresHook
 from airflow.operators.python import PythonOperator
-from airflow.operators.empty import EmptyOperator
 import logging
 import pandas as pd
 import os
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
 # create logger
 logger = logging.getLogger("GGUJFKenedy_logging")
@@ -37,6 +37,10 @@ print('airflow_path',os.path.abspath(os.path.join(airflow_path, os.pardir)))
 include_path=airflow_path+'/include/'
 print('include_directory',include_path)
 
+# get files directory
+files_path=airflow_path+'/files/'
+print(files_path)
+
 # get datasets directory
 datasets_path=airflow_path+'/datasets/'
 print(datasets_path)
@@ -46,7 +50,7 @@ try:
   sql_query = reading_query.read()
   reading_query.close
 except FileNotFoundError:
-  logging.error('Could not find .sql file.')
+  logging.error('Could not find GGUJFKenedy.sql file.')
 
 default_args = {
     'owner': 'airflow',
@@ -61,9 +65,43 @@ def get_data_from_db():
   pg_hook=PostgresHook(postgres_conn_id='alkemy_db', schema='training')
   logging.info('Getting PostgresHook on Kennedy')
   df=pg_hook.get_pandas_df(sql=sql_query)
-  csv_file=df.to_csv(datasets_path+'GGUJFKenedy_select.csv',sep=',', index=False) # It works despise to_csv function
+  csv_file=df.to_csv(files_path+'GGUJFKenedy_select.csv',sep=',', index=False) # It works despise to_csv function
   logging.info('GGUJFKenedy_select.csv file created!')                            # not being recognized
   return csv_file
+
+# Convention: If duplicate data is found, keep the first one. So, this will remove duplicated values beyond the first.
+try:
+  codigos_postales_file_path=airflow_path+'/assets/codigos_postales.csv'
+  cp_dataframe=pd.read_csv(codigos_postales_file_path)
+  cp_dataframe['localidad']=cp_dataframe['localidad'].str.lower()
+  cp_dataframe.rename({'codigo_postal':'postal_code'}, axis=1, inplace=True)
+  cp_dataframe.rename({'localidad':'location'}, axis=1, inplace=True)
+  cp_dataframe=cp_dataframe.drop_duplicates(subset='location')
+  cp_dataframe['postal_code']=cp_dataframe['postal_code'].astype(str)
+  print(cp_dataframe)
+except FileNotFoundError:
+  logging.warning('Could not find codigos_postales.csv file!')
+except KeyError:
+  logging.warning('Check the names of the columns (Function vs codigos_postales.csv file).')
+
+
+def data_transformation():
+  pg_hook=PostgresHook(postgres_conn_id='alkemy_db', schema='training')
+  logging.info('Getting PostgresHook on Kennedy')
+  df=pg_hook.get_pandas_df(sql=sql_query)
+  # Setting config to change data format as requested. ¡first_name and last_name would remain the same due to a convention!
+  df['university']=df['university'].str.lower().str[1:].str.replace('-',' ')
+  df['career']=df['career'].str.lower().str.replace('-',' ')
+  df['inscription_date']=df['inscription_date'].astype(str)
+  df['gender']=df['gender'].replace(['M','F'],['male','female'])
+  df['postal_code']=df['postal_code'].astype(str)
+  df['email']=df['email'].str.lower().str.replace('-',' ')
+  df['age']=df['age'].astype(int)
+  df.drop('location', axis=1, inplace=True)
+  df=df.merge(cp_dataframe,on='postal_code',how='left')
+  df=df[['university','career','inscription_date','first_name','last_name','gender','age','location','postal_code','email']]
+  processed_csv_file=df.to_csv(datasets_path+'GGUJFKenedy_select.csv',sep=',', index=False)
+  return processed_csv_file
 
 with DAG(
   dag_id='GGUJFKenedy_dag',
@@ -75,6 +113,6 @@ with DAG(
 ) as dag:
 
   extraction=PythonOperator(task_id='kennedy_extract', python_callable=get_data_from_db)
-  transformation_task=EmptyOperator(task_id='kennedy_transormation')
+  transformation_task=PythonOperator(task_id='kennedy_transormation', python_callable=data_transformation)
 
   extraction >> transformation_task
