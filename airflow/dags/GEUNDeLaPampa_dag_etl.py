@@ -50,6 +50,8 @@ import pandas as pd
 
 import logging
 
+from os import remove
+
 from pathlib import Path
 
 
@@ -83,7 +85,8 @@ def extraction():
         df = hook.get_pandas_df(query)
 
         # export to a .csv file in the folder suggested in the issue
-        df.to_csv(f'{airflow_folder}/datasets/{university}_select.csv',sep=';')
+        remove(f'{airflow_folder}/files/{university}_select.csv')
+        df.to_csv(f'{airflow_folder}/files/{university}_select.csv',sep=';')
 
         logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - extraction done successfully")
         

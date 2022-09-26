@@ -2,13 +2,13 @@
 OBJETIVO: Obtener los datos de las pesonas anotadas en entre las fechas 01/9/2020 al 01/02/2021.*/
 
 SELECT 
-	inscription_dates,
 	univiersities as university,
-	carrera,
+	carrera as career,
+	inscription_dates as inscription_date,
 	null as first_name,
 	names as last_name,
 	sexo as gender,
-	null as age,
+	fechas nacimiento as age,
 	null as postal_code,
 	localidad as location,
 	email
