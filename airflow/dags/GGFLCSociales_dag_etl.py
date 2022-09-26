@@ -6,6 +6,8 @@ import logging
 import pandas as pd
 import os
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+from boto3.exceptions import S3UploadFailedError
+from botocore.exceptions import ClientError
 
 # create logger
 logger = logging.getLogger("GGFLCSociales_logging")
@@ -88,6 +90,7 @@ def data_transformation():
   pg_hook=PostgresHook(postgres_conn_id='alkemy_db', schema='training')
   logging.info('Getting PostgresHook on Sociales')
   df=pg_hook.get_pandas_df(sql=sql_query)
+
   # Setting config to change data format as requested. ¡first_name and last_name would remain the same due to a convention!
   df['university']=df['university'].str.lower().str[1:].str.replace('-',' ')
   df['career']=df['career'].str.lower().str.replace('-',' ')
@@ -102,6 +105,19 @@ def data_transformation():
   processed_csv_file=df.to_csv(datasets_path+'GGFLCSociales_select.csv',sep=',', index=False)
   return processed_csv_file
 
+def upload_to_s3(filename: str, key: str, bucket_name: str) -> None:
+  try:
+    s3_hook=S3Hook(aws_conn_id='aws_s3_bucket')
+    s3_hook.load_file(filename=filename, key=key, bucket_name=bucket_name)
+  except ValueError:
+    logging.warning('File could already exist in s3 bucket destination. Check it.')
+  except FileNotFoundError:
+    logging.error('Could not find GGUJFKenedy_select.csv file')
+  except S3UploadFailedError:
+    logging.error('Bucket destination does not exist.')
+  except ClientError:
+    logging.error('Check for Admin->Connections->aws_s3_bucket Key and SecretKey loaded data.')
+
 with DAG(
   dag_id='GGFLCSociales_dag',
   description='Dag para la Facultad Latinoamericana de Ciencias Sociales',
@@ -113,5 +129,9 @@ with DAG(
 
   extraction_task=PythonOperator(task_id='sociales_extract', python_callable=get_data_from_db)
   transformation_task=PythonOperator(task_id='sociales_transormation', python_callable=data_transformation)
+  upload_to_s3_task=PythonOperator(task_id='sociales_upload', python_callable=upload_to_s3,op_kwargs={
+    'filename':datasets_path+'/GGFLCSociales_select.csv',
+    'key': 'GGFLCSociales_select.csv',
+    'bucket_name': 'cohorte-septiembre-5efe33c6'})
 
-  extraction_task >> transformation_task
+  extraction_task >> transformation_task >> upload_to_s3_task
