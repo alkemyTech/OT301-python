@@ -2,6 +2,7 @@ from datetime import datetime
 from datetime import timedelta
 import logging
 
+
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -12,6 +13,7 @@ name_university = 'GDUNTresDeFebrero'
 
 # Configuración de Logging
 logging.basicConfig(format=f'%(asctime)s - {dag_name} - %(message)s', datefmt='%Y-%m-%d', level=logging.INFO)
+
 
 # Argumentos del DAG
 default_args={
@@ -52,7 +54,7 @@ with DAG(dag_id=dag_name,
     )
 
     # Transformacion con pandas
-    transform = DummyOperator(
+    transform = PythonOperator(
         task_id = 'transformacion',
         python_callable=transform_db
     )

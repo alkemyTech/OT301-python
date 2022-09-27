@@ -2,6 +2,7 @@ from datetime import datetime
 from datetime import timedelta
 import logging
 
+
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
