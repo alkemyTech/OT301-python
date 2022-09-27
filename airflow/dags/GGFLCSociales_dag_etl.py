@@ -1,31 +1,49 @@
 from datetime import datetime, timedelta
 from airflow import DAG
-from airflow.operators.dummy import DummyOperator
+from airflow.providers.postgres.operators.postgres import PostgresHook
+from airflow.operators.python import PythonOperator
+from airflow.operators.empty import EmptyOperator
 import logging
+import pandas as pd
+import os
 
-#create logger
-logger = logging.getLogger("dags_logging")
+# create logger
+logger = logging.getLogger("GGFLCSociales_logging")
 logger.setLevel(logging.DEBUG)
 
-#console handler
+# console handler
 cons_handler = logging.StreamHandler()
 cons_handler.setLevel(logging.INFO)
 
-#create formatter
+# create formatter
 log_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", "%Y-%m-%d")
 
-#add formatter to cons_hand
+# add formatter to cons_hand
 cons_handler.setFormatter(log_formatter)
 
-#add cons_handler to logger
+# add cons_handler to logger
 logger.addHandler(cons_handler)
 
-#messages examples
-logger.debug("Dag_debugg")
-logger.info("Dag running normally")
-logger.warning("Warn message")
-logger.error("Problems running ETL")
-logger.critical("Had to break! Problems.")
+
+# get current directory (dags)
+dags_path = os.path.dirname(os.path.realpath(__file__))
+print('dags_path',dags_path)
+
+# get airflow directory
+airflow_path=os.path.abspath(os.path.join(dags_path, os.pardir))
+print('airflow_path',os.path.abspath(os.path.join(airflow_path, os.pardir)))
+
+# get include directory
+include_path=airflow_path+'/include/'
+print('include_directory',include_path)
+
+# get datasets directory
+datasets_path=airflow_path+'/datasets/'
+print(datasets_path)
+
+reading_query= open(include_path+'GGFLCSociales.sql','r')
+sql_query = reading_query.read()
+reading_query.close
 
 default_args = {
     'owner': 'airflow',
@@ -33,34 +51,27 @@ default_args = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 3,
-    'retry_delay': timedelta(minutes=5)
+    'retry_delay': timedelta(minutes=1)
 }
 
+def get_data_from_db():
+  pg_hook=PostgresHook(postgres_conn_id='alkemy_db', schema='training')
+  logging.info('Getting PostgresHook on Sociales')
+  df=pg_hook.get_pandas_df(sql=sql_query)
+  csv_file=df.to_csv(datasets_path+'GGFLCSociales_select.csv',sep=',', index=False) # It works despise to_csv function
+  logging.info('GGFLCSociales_select.csv file created!')                            # not being recognized
+  return csv_file
+
 with DAG(
-    'GGFLCSociales_dag_',
-    description='Dag para la Facultad Latinoamericana de Ciencias Sociales',
-    schedule_interval=timedelta(hours=1),
-    start_date=datetime(2022, 1, 1),
-    default_args=default_args
+  dag_id='GGFLCSociales_dag',
+  description='Dag para la Facultad Latinoamericana de Ciencias Sociales',
+  schedule=timedelta(hours=1),
+  start_date=datetime(2022, 1, 1),
+  default_args=default_args,
+  template_searchpath = include_path
 ) as dag:
-    task_1=DummyOperator(task_id='GGFLatinoamericanaCsSociales')
-    task_2=DummyOperator(task_id='Proc_with_Pandas')
-    task_3=DummyOperator(task_id='Load_data_in_S3')
 
-try:
-    task_1
-    logger.info("Dag running normally")
-except logging.exception:
-    logger.error("Problems connecting to database!")
+  start_task=EmptyOperator(task_id='start_task')
+  extraction=PythonOperator(task_id='sociales_extract', python_callable=get_data_from_db)
 
-try:
-    task_2
-    logger.info("Data transforming running normally")
-except logging.exception:
-    logger.error("Problems transforming data!")
-
-try:
-    task_3
-    logger.info("Uploading data running normally")
-except logging.exception:
-    logger.error("Problems uploading data to S3!")
+  start_task >> extraction
