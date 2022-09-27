@@ -2,6 +2,7 @@ from datetime import datetime
 from datetime import timedelta
 import logging
 
+
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -22,6 +23,7 @@ default_args={
 }
 
 logging.info('Iniciando DAG')
+
 
 POSTGRES_CONN_ID = 'alkemy_db'
 
