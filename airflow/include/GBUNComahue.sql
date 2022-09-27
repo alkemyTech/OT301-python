@@ -1,5 +1,3 @@
---Sentencia sql para substraer la información y estructura de la Universidad Nacional Del Comahue
---según lo indicado en OT301-14
 	SELECT 
 universidad as university, 
 carrera as career, 
