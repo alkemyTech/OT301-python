@@ -95,7 +95,7 @@ def data_transformation():
   df['university']=df['university'].str.lower().str[1:].str.replace('-',' ')
   df['career']=df['career'].str.lower().str.replace('-',' ')
   df['inscription_date']=df['inscription_date'].astype(str)
-  df['gender']=df['gender'].replace(['M','F'],['male','female'])
+  df['gender']=df['gender'].replace(['m','f'],['male','female'])
   df['postal_code']=df['postal_code'].astype(str)
   df['email']=df['email'].str.lower().str.replace('-',' ')
   df['age']=df['age'].astype(int)
