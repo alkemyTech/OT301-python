@@ -1,6 +1,5 @@
 '''COMO: Analista de Datos
 
-
 OT 301-25
 QUIERO: Configurar un DAG, sin consultas, ni procesamiento
 PARA: Hacer un ETL para 2 universidades distintas.
@@ -14,18 +13,28 @@ PARA: poder intentar nuevamente si la base de datos me produce un error
 Criterios de aceptación: 
 Configurar el retry para las tareas del DAG de la Universidad Nacional De La Pampa
 
-
 OT301-41
 QUIERO: Configurar los log 
 PARA: Mostrarlos en consola
 Criterios de aceptación:
 - Configurar logs para Universidad Nacional De La Pampa
-- Configurar logs para Universidad Abierta Interamericana
 - Use la librería de Loggin de python: https://docs.python.org/3/howto/logging.html
 - Realizar un log al empezar cada DAG con el nombre del logger
 - Formato del log: %Y-%m-%d - nombre_logger - mensaje 
 Aclaración: 
-Deben dejar la lista de configuración para que se pueda incluir dentro de las funciones futuras. No es necesario empezar a escribir registros.'''
+Deben dejar la lista de configuración para que se pueda incluir dentro de las funciones futuras. No es necesario empezar a escribir registros.
+
+OT301-49
+QUIERO: Implementar SQL Operator
+PARA: tomar los datos de las bases de datos en el DAG
+Criterios de aceptación: Configurar un Python Operators, para que extraiga información de la base de datos utilizando el .sql disponible en el repositorio base de la Universidad Nacional De La Pampa
+Dejar la información en un archivo .csv dentro de la carpeta datasets.
+
+OT301-57
+QUIERO: Implementar el Python Operator
+PARA: procesar los datos obtenidos de la base de datos dentro del DAG
+Criterios de aceptación: 
+Configurar el Python Operator para que ejecute la función que procese los datos para la Universidad Nacional de La Pampa'''
 
 from datetime import timedelta, datetime, date
 
@@ -33,7 +42,17 @@ from airflow import DAG
 
 from airflow.operators.dummy import DummyOperator
 
+from airflow.operators.python import PythonOperator
+
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+
+import pandas as pd
+
 import logging
+
+from pathlib import Path
+
+from os import remove
 
 
 # Declare the dag arguments
@@ -51,9 +70,31 @@ default_args = {
 
 def extraction():
     # Extraction of the required data from the university associated with the database
+    airflow_folder = Path(__file__).resolve().parent.parent
+    university = 'GEUNDeLaPampa'
     try:
-        # implementation of the function
+        # Reading the query for this particular university
+        file_sql = open(f'{airflow_folder}/include/{university}.sql','r')
+        query = file_sql.read()
+        file_sql.close()
+
+        # connecting to the database
+        hook = PostgresHook(postgres_conn_id='alkemy_db')
+
+        # execution of the query to save in a pandas dataframe
+        df = hook.get_pandas_df(query)
+
+        # If it exists, I delete the file generated previously to update the information.
+        try:
+            remove(f'{airflow_folder}/files/{university}_select.csv')
+        except:
+            pass
+
+        # export to a .csv file in the folder suggested in the issue
+        df.to_csv(f'{airflow_folder}/files/{university}_select.csv',sep=';')
+
         logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - extraction done successfully")
+        
     except:
         logging.warning(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - extraction was not performed correctly")
 
@@ -84,10 +125,19 @@ with DAG(
 ) as dag:
 
     # Operators for the tasks requested for the DAG
-    # They do not call the functions declared above because the DummyOperators do not allow it, but if it is modified later, that connection can be made.
 
-    extraction = DummyOperator(task_id='extraction')
-    transformation = DummyOperator(task_id='transformation')
+    extraction = PythonOperator(
+        task_id='extraction',
+        dag=dag,
+        python_callable=extraction
+    )
+    
+    transformation = PythonOperator(
+        task_id='transformation',
+        dag=dag,
+        python_callable=transformation
+    )
+    
     load = DummyOperator(task_id='load')
 
 

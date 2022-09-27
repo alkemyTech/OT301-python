@@ -135,3 +135,4 @@ with DAG(
     'bucket_name': 'cohorte-septiembre-5efe33c6'})
 
   extraction_task >> transformation_task >> upload_to_s3_task
+

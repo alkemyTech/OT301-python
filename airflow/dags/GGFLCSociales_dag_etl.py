@@ -90,7 +90,6 @@ def data_transformation():
   pg_hook=PostgresHook(postgres_conn_id='alkemy_db', schema='training')
   logging.info('Getting PostgresHook on Sociales')
   df=pg_hook.get_pandas_df(sql=sql_query)
-
   # Setting config to change data format as requested. ¡first_name and last_name would remain the same due to a convention!
   df['university']=df['university'].str.lower().str[1:].str.replace('-',' ')
   df['career']=df['career'].str.lower().str.replace('-',' ')
