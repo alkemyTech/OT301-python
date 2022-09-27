@@ -41,9 +41,13 @@ print('include_directory',include_path)
 datasets_path=airflow_path+'/datasets/'
 print(datasets_path)
 
-reading_query= open(include_path+'GGUJFKenedy.sql','r')
-sql_query = reading_query.read()
-reading_query.close
+try:
+  reading_query= open(include_path+'GGUJFKenedy.sql','r')
+  sql_query = reading_query.read()
+  reading_query.close
+except FileNotFoundError:
+  logging.error('Could not find .sql file.')
+
 
 default_args = {
     'owner': 'airflow',
@@ -71,7 +75,8 @@ with DAG(
   template_searchpath = include_path
 ) as dag:
 
-  start_task=EmptyOperator(task_id='start_task')
   extraction=PythonOperator(task_id='kennedy_extract', python_callable=get_data_from_db)
+  transformation_task=EmptyOperator(task_id='kennedy_transormation')
 
-  start_task >> extraction
+  extraction >> transformation_task
+
