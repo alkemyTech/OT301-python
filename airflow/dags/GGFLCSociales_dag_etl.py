@@ -102,7 +102,7 @@ def data_transformation():
   df.drop('postal_code', axis=1, inplace=True)
   df=df.merge(cp_dataframe,on='location',how='left')
   df=df[['university','career','inscription_date','first_name','last_name','gender','age','location','postal_code','email']]
-  processed_csv_file=df.to_csv(datasets_path+'GGFLCSociales_select.csv',sep=',', index=False)
+  processed_csv_file=df.to_csv(datasets_path+'GGFLCSociales_process.csv',sep=',', index=False)
   return processed_csv_file
 
 def upload_to_s3(filename: str, key: str, bucket_name: str) -> None:
@@ -112,11 +112,11 @@ def upload_to_s3(filename: str, key: str, bucket_name: str) -> None:
   except ValueError:
     logging.warning('File could already exist in s3 bucket destination. Check it.')
   except FileNotFoundError:
-    logging.error('Could not find GGUJFKenedy_select.csv file')
+    logging.error('Could not find GGFLCSociales_process.csv file')
   except S3UploadFailedError:
-    logging.error('Bucket destination does not exist.')
+    logging.error('Bucket destination does not exist. Please check its name either on aws or in the code.')
   except ClientError:
-    logging.error('Check for Admin->Connections->aws_s3_bucket Key and SecretKey loaded data.')
+    logging.error('Error connecting to Bucket. Check for Admin->Connections->aws_s3_bucket Key and SecretKey loaded data.')
 
 with DAG(
   dag_id='GGFLCSociales_dag',
@@ -130,8 +130,8 @@ with DAG(
   extraction_task=PythonOperator(task_id='sociales_extract', python_callable=get_data_from_db)
   transformation_task=PythonOperator(task_id='sociales_transormation', python_callable=data_transformation)
   upload_to_s3_task=PythonOperator(task_id='sociales_upload', python_callable=upload_to_s3,op_kwargs={
-    'filename':datasets_path+'/GGFLCSociales_select.csv',
-    'key': 'GGFLCSociales_select.csv',
+    'filename':datasets_path+'/GGFLCSociales_process.csv',
+    'key': 'GGFLCSociales_process.csv',
     'bucket_name': 'cohorte-septiembre-5efe33c6'})
 
   extraction_task >> transformation_task >> upload_to_s3_task
