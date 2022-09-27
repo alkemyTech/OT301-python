@@ -5,14 +5,16 @@ import logging
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.operators.python import PythonOperator
 
-dag_name = 'UNTresDeFebrero_dag_etl'
+dag_name = 'GDUNTresDeFebrero_dag_etl'
+name_university = 'GDUNTresDeFebrero'
 
 # Configuración de Logging
 logging.basicConfig(format=f'%(asctime)s - {dag_name} - %(message)s', datefmt='%Y-%m-%d', level=logging.INFO)
 
-# Configuración del DAG
-
+# Argumentos del DAG
 default_args={
     'owner': 'Alkemy',
     'start_date': datetime(2022, 9, 19),
@@ -22,8 +24,20 @@ default_args={
 
 logging.info('Iniciando DAG')
 
-with DAG(dag_id=dag_name,
 
+POSTGRES_CONN_ID = 'alkemy_db'
+
+def extract_db():
+    try:
+        with open(f'../OT301-python/airflow/include/{name_university}.sql', 'r') as sqlfile:
+            query = sqlfile.read()
+        pg_hook = PostgresHook('alkemy_db')
+        pg_hook.copy_expert(f"COPY ({query}) TO STDOUT WITH CSV HEADER", filename=f'../OT301-python/airflow/file/{name_university}_select.csv')
+        logging.info('Successful extraction')
+    except:
+        logging.warning('Failure in the extraction process')
+
+with DAG(dag_id=dag_name,
         description='Universidad Nacional Tres de Febrero proceso ETL',
         start_date=datetime(2022,9,19),
         schedule_interval=timedelta(hours=1),
@@ -31,8 +45,9 @@ with DAG(dag_id=dag_name,
 ) as dag:
 
     # Extraccion de archivos desde base SQL
-    extract = DummyOperator(
-        task_id='extraccion'
+    extract = PythonOperator(
+        task_id='extraccion',
+        python_callable=extract_db
     )
 
     # Transformacion con pandas

@@ -26,26 +26,20 @@ cons_handler.setFormatter(log_formatter)
 # add cons_handler to logger
 logger.addHandler(cons_handler)
 
-
 # get current directory (dags)
 dags_path = os.path.dirname(os.path.realpath(__file__))
-print('dags_path',dags_path)
 
 # get airflow directory
 airflow_path=os.path.abspath(os.path.join(dags_path, os.pardir))
-print('airflow_path',os.path.abspath(os.path.join(airflow_path, os.pardir)))
 
 # get include directory
 include_path=airflow_path+'/include/'
-print('include_directory',include_path)
 
 # get files directory
 files_path=airflow_path+'/files/'
-print(files_path)
 
 # get datasets directory
 datasets_path=airflow_path+'/datasets/'
-print(datasets_path)
 
 try:
   reading_query= open(include_path+'GGFLCSociales.sql','r')
@@ -90,7 +84,6 @@ def data_transformation():
   pg_hook=PostgresHook(postgres_conn_id='alkemy_db', schema='training')
   logging.info('Getting PostgresHook on Sociales')
   df=pg_hook.get_pandas_df(sql=sql_query)
-
   # Setting config to change data format as requested. ¡first_name and last_name would remain the same due to a convention!
   df['university']=df['university'].str.lower().str[1:].str.replace('-',' ')
   df['career']=df['career'].str.lower().str.replace('-',' ')

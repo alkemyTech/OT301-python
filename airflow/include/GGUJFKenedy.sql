@@ -5,10 +5,7 @@ select
 	split_part(nombres ,'-',1) as first_name,
 	split_part(nombres ,'-',2) as last_name,
 	sexo as gender,
-	(
-		split_part(to_char(to_date(fechas_de_inscripcion ,'YY-Mon-DD'),'YY'),'-',1)::INT+'100' - 
-		split_part(to_char(to_date(fechas_nacimiento ,'YY-Mon-DD'),'YY'),'-',1)::INT
-	) as age,
+	TO_CHAR(age(to_date(fechas_de_inscripcion,'YY-Mon-DD'),to_date(fechas_nacimiento,'YY-Mon-DD')),'YYY')::INT as age,
 	codigos_postales as postal_code,
 	'' as location,
 	emails as email
