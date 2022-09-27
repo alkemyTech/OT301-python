@@ -48,6 +48,7 @@ try:
 except FileNotFoundError:
   logging.error('Could not find .sql file.')
 
+
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
@@ -78,3 +79,4 @@ with DAG(
   transformation_task=EmptyOperator(task_id='sociales_transormation')
 
   extraction >> transformation_task
+
