@@ -57,6 +57,10 @@ from pathlib import Path
 
 from os import remove
 
+# declare global variables
+airflow_folder = Path(__file__).resolve().parent.parent
+university = 'GEUAbiertaInteramericana'
+
 # Declare the dag arguments
 
 default_args = {
@@ -71,10 +75,8 @@ default_args = {
 
 # Functions to execute when using the DAGS, at this moment they are not called because the DummyOpertors do not allow it
 
+# Extraction of the required data from the university associated with the database
 def extraction():
-    # Extraction of the required data from the university associated with the database
-    airflow_folder = Path(__file__).resolve().parent.parent
-    university = 'GEUAbiertaInteramericana'
     try:
         # Reading the query for this particular university
         file_sql = open(f'{airflow_folder}/include/{university}.sql','r')
@@ -102,23 +104,72 @@ def extraction():
         logging.warning(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - extraction was not performed correctly")
 
 
-
+# Processing of data associated with the university
 def transformation():
-    # Processing of data associated with the university
     try:
-        # implementation of the function
-        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - transformation done successfully")
+        # reading the csv file extracted from the database
+        df = pd.read_csv(f'{airflow_folder}/files/{university}_select.csv', sep=';')
+
+        # college enrollment age is calculated
+        df['age'] = pd.to_datetime(df['age'], yearfirst=True)
+        df['inscription_date'] = pd.to_datetime(df['inscription_date'], yearfirst=True)
+        for i in range(0,len(df)):
+            if df.loc[i,'age'].year > 2006:
+                df.loc[i,'year'] = df.loc[i,'age'].year - 100
+                df.loc[i,'age'] = datetime(int(df.loc[i,'year']), df.loc[i,'age'].month, df.loc[i,'age'].day)
+        df['age'] = df['inscription_date']-df['age']
+        df['age'] = (df['age'].dt.days/365.25).astype(int)
+
+        # the parameters university, carrer, inscription_date, gender and email are accommodated as requested
+        df['university'] = df['university'].str.lower().str.replace('-',' ').str.rstrip().str.lstrip()
+        df['career'] = df['career'].str.lower().str.replace('-',' ').str.rstrip().str.lstrip()
+        df['inscription_date'] = df['inscription_date'].astype(str)
+        df['gender'] = df['gender'].replace({'F':'female','M':'male'})
+        df['email'] = df['email'].str.lower().str.rstrip().str.lstrip()
+
+        # the name is separated and the format is accommodated
+        name = df['last_name'].str.lower().str.rstrip().str.lstrip().str.split('-').to_list()
+        columns = ['first_name','last_name','-','-']
+        name = pd.DataFrame(name, columns=columns)
+        df['first_name'] = name['first_name']
+        df['last_name'] = name['last_name']
+
+        # the missing location parameter is filled according to the "postal codes" file located in the assets
+        file = f'{airflow_folder}/assets/codigos_postales.csv'
+        df_cp = pd.read_csv(file, sep=',')
+        df_cp.rename({'codigo_postal':'postal_code'}, axis=1, inplace=True)
+        df_cp.rename({'localidad':'location'}, axis=1, inplace=True)
+        df_cp.drop_duplicates(subset='location')
+        df_cp['location'] = df_cp['location'].str.lower().str.rstrip().str.lstrip()
+        df['location'] = df['location'].str.lower().str.replace('-',' ').str.rstrip().str.lstrip()
+        df.drop('postal_code', axis=1, inplace=True)
+        df = df.merge(df_cp, on='location', how='left')
+
+        # leave the columns that interest me for the file
+        df=df[['university','career','inscription_date','first_name','last_name','gender','age','postal_code','location','email']]
+
+        # If it exists, I delete the file generated previously to update the information.
+        try:
+            remove(f'{airflow_folder}/datasets/{university}_process.txt')
+        except:
+            pass
+
+
+        # export to a .txt file in the folder suggested in the issue
+        df.to_csv(f'{airflow_folder}/datasets/{university}_process.txt', sep=';')
+
+        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Process- transformation done successfully")
     except:
-        logging.warning(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - transformation was not performed correctly")
+        logging.warning(f"{date.today().year}-{date.today().month}-{date.today().day} - Process - transformation was not performed correctly")
 
 
+# data load corresponding to the university received as a parameter
 def load():
-    # data load corresponding to the university received as a parameter
     try:
         # implementation of the function
-        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - load done successfully")
+        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Load - load done successfully")
     except:
-        logging.warning(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - load was not performed correctly")
+        logging.warning(f"{date.today().year}-{date.today().month}-{date.today().day} - Load - load was not performed correctly")
 
 
 

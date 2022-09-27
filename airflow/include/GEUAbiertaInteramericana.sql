@@ -8,7 +8,7 @@ SELECT
 	null as first_name,
 	names as last_name,
 	sexo as gender,
-	fechas nacimiento as age,
+	fechas_nacimiento as age,
 	null as postal_code,
 	localidad as location,
 	email
