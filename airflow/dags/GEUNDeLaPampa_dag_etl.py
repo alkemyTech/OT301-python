@@ -1,28 +1,5 @@
 '''COMO: Analista de Datos
-
-OT 301-25
-QUIERO: Configurar un DAG, sin consultas, ni procesamiento
-PARA: Hacer un ETL para 2 universidades distintas.
-Criterios de aceptación: 
-Configurar el DAG para procese la Universidad Nacional De La Pampa
-Documentar los operators que se deberían utilizar a futuro, teniendo en cuenta que se va a hacer dos consultas SQL (una para cada universidad), se van a procesar los datos con pandas y se van a cargar los datos en S3.  El DAG se debe ejecutar cada 1 hora, todos los días.
-
-OT301-33
-QUIERO: Configurar los retries con la conexión al a base de datos
-PARA: poder intentar nuevamente si la base de datos me produce un error
-Criterios de aceptación: 
-Configurar el retry para las tareas del DAG de la Universidad Nacional De La Pampa
-
-OT301-41
-QUIERO: Configurar los log 
-PARA: Mostrarlos en consola
-Criterios de aceptación:
-- Configurar logs para Universidad Nacional De La Pampa
-- Use la librería de Loggin de python: https://docs.python.org/3/howto/logging.html
-- Realizar un log al empezar cada DAG con el nombre del logger
-- Formato del log: %Y-%m-%d - nombre_logger - mensaje 
-Aclaración: 
-Deben dejar la lista de configuración para que se pueda incluir dentro de las funciones futuras. No es necesario empezar a escribir registros.
+Sprint 1: OT301-25 OT301-33 OT301-41
 
 OT301-49
 QUIERO: Implementar SQL Operator
@@ -34,7 +11,36 @@ OT301-57
 QUIERO: Implementar el Python Operator
 PARA: procesar los datos obtenidos de la base de datos dentro del DAG
 Criterios de aceptación: 
-Configurar el Python Operator para que ejecute la función que procese los datos para la Universidad Nacional de La Pampa'''
+Configurar el Python Operator para que ejecute la función que procese los datos para la Universidad Nacional de La Pampa
+
+OT301-65
+QUIERO: Crear una función Python con Pandas para cada universidad
+PARA: poder normalizar los datos de las mismas
+Criterios de aceptación: 
+Una funcion que devuelva un txt para cada una de launiversidad Abierta Interamericana
+Datos Finales:
+- university: str minúsculas, sin espacios extras, ni guiones
+- career: str minúsculas, sin espacios extras, ni guiones
+- inscription_date: str %Y-%m-%d format
+- first_name: str minúscula y sin espacios, ni guiones
+- last_name: str minúscula y sin espacios, ni guiones
+- gender: str choice(male, female)
+- age: int
+- postal_code: str
+- location: str minúscula sin espacios extras, ni guiones
+- email: str minúsculas, sin espacios extras, ni guiones
+Aclaraciones:
+Para calcular codigo postal o locación se va a utilizar el .csv que se encuentra en el repo.
+La edad se debe calcular en todos los casos
+
+OT301-77
+QUIERO: Utilizar un operador creado por la comunidad
+PARA: poder subir el txt creado por el operador de Python al S3
+Criterios de aceptación: 
+- Tomar el .txt del repositorio base 
+- Buscar un operador creado por la comunidad que se adecue a los datos.
+- Configurar el S3 Operator para la Universidad Nacional De La Pampa
+- Subir el archivo a S3'''
 
 from datetime import timedelta, datetime, date
 
