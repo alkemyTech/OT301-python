@@ -31,7 +31,16 @@ Datos Finales:
 - email: str minúsculas, sin espacios extras, ni guiones
 Aclaraciones:
 Para calcular codigo postal o locación se va a utilizar el .csv que se encuentra en el repo.
-La edad se debe calcular en todos los casos'''
+La edad se debe calcular en todos los casos
+
+OT301-77
+QUIERO: Utilizar un operador creado por la comunidad
+PARA: poder subir el txt creado por el operador de Python al S3
+Criterios de aceptación: 
+- Tomar el .txt del repositorio base 
+- Buscar un operador creado por la comunidad que se adecue a los datos.
+- Configurar el S3 Operator para la Universidad Nacional De La Pampa
+- Subir el archivo a S3'''
 
 from datetime import timedelta, datetime, date
 
