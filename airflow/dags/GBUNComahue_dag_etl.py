@@ -1,26 +1,58 @@
 #Dag de ETL para la Universidad Nacional Del Comahue
 
-#Librerias que necesitaremos
-
+#Importamos las librerias que utilizaremos
 from airflow import DAG
 from airflow.operators.dummy import DummyOperator
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.operators.python import PythonOperator
 from datetime import timedelta,datetime
+from pandas import DataFrame
+import logging
+from os import path
+
+# Le damos la configuración base a logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(message)s', 
+                    datefmt='%Y/%m/%d')
+logging.info('Dags iniciado')               #Creamos el registro de que se inicio el dag
 
 default_args = {
-    'retries': 5,               #Configuro los retries
+    'retries': 5,                           #Configuramos los retries
     'retry_delay': timedelta(minutes=5)
 }
+path_dags = path.dirname(path.realpath(__file__)) #Guardo la dirección de este .py
+name_un = 'GBUNComahue'                           #Nombre de la universidad
+
+#Defino la función que conectara a la bd y creará el archivo .csv
+def extract():                              
+    #Leo el archivo .sql y guardo la sentencia en una variable
+    with open(path_dags.replace('/dags',f'/include/{name_un}.sql'),'r') as f:
+        query = f.read()                    
+        f.close()
+    #Realizo la extración
+    try:
+        pg_hook = PostgresHook(postgres_conn_id='alkemy_db')
+        df_data = pg_hook.get_pandas_df(sql=query)
+        logging.info('Exporting query to file')
+        df_data.to_csv(path_dags.replace('/dags',f'/files/{name_un}_select.csv'))
+        logging.info('Exporting finished')
+    except:
+        logging.warning('Data base - Connection failed')
+
+#Defino la función que procesara los datos de la universidad
+def transform():
+    pass
 
 with DAG(
     'GBUNComahue_dag_etl',
-    description = 'ETL para la Universidad Nacional Del Comahue del grupo B',
-    schedule_interval=timedelta(hours=1),        #Intervalo de ejecución
+    description = 'ETL para la Universidad Nacional Del Comahue',
+    schedule_interval=timedelta(hours=1),
     start_date=datetime(2022,9,19),
-    default_args=default_args
-
+    default_args=default_args,
+    template_searchpath=path_dags.replace('/dags','/include')
 ) as dag:
-    extr = DummyOperator(task_id='extr') #Extracción de datos con sentencias sql
-    trans = DummyOperator(task_id='trans') #Procesamiento de los datos con Pandas
-    load = DummyOperator(task_id='load') #Carga de los datos procesados
+    extract_task = PythonOperator(task_id='extr',python_callable=extract) #Extracción de datos
+    transform_task = PythonOperator(task_id='trans',python_callable=transform)  #Procesamiento con Pandas
+    load = DummyOperator(task_id='load')    #Carga de los datos procesados
 
-    extr >> trans >> load
+    extract_task >> transform_task >> load
