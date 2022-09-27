@@ -25,13 +25,16 @@ POSTGRES_CONN_ID = 'alkemy_db'
 
 def extract_db():
     try:
-        with open(f'./OT301-python/airflow/include/{name_university}.sql', 'r') as sqlfile:
+        with open(f'../OT301-python/airflow/include/{name_university}.sql', 'r') as sqlfile:
             query = sqlfile.read()
         pg_hook = PostgresHook('alkemy_db')
-        pg_hook.copy_expert(f"COPY ({query}) TO STDOUT WITH CSV HEADER", filename=f'./OT301-python/airflow/datasets/{name_university}_select.csv')
+        pg_hook.copy_expert(f"COPY ({query}) TO STDOUT WITH CSV HEADER", filename=f'../OT301-python/airflow/file/{name_university}_select.csv')
         logging.info('Successful extraction')
     except:
         logging.warning('Failure in the extraction process')
+
+def transform_db():
+    pass
 
 with DAG(dag_id=dag_name,
         description='Universidad Tecnolgogica Nacional proceso ETL',
@@ -47,8 +50,9 @@ with DAG(dag_id=dag_name,
     )
 
     # Transformacion con pandas
-    transform = DummyOperator(
-        task_id = 'transformacion'
+    transform = PythonOperator(
+        task_id = 'transformacion',
+        python_callable=transform_db
     )
 
     # Carga de datos en S3

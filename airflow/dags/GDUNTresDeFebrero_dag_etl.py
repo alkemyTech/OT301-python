@@ -35,6 +35,9 @@ def extract_db():
     except:
         logging.warning('Failure in the extraction process')
 
+def transform_db():
+    pass
+
 with DAG(dag_id=dag_name,
         description='Universidad Nacional Tres de Febrero proceso ETL',
         start_date=datetime(2022,9,19),
@@ -50,7 +53,8 @@ with DAG(dag_id=dag_name,
 
     # Transformacion con pandas
     transform = DummyOperator(
-        task_id = 'transformacion'
+        task_id = 'transformacion',
+        python_callable=transform_db
     )
 
     # Carga de datos en S3
