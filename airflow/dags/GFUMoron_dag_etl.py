@@ -1,5 +1,5 @@
-''' Configurar un DAG, sin consultas, ni procesamiento para hacer un ETL 
-Criterios de aceptación: Configurar el DAG para procese la Universidad Nacional de Rio Cuarto
+''' Configura un DAG, sin consultas, ni procesamiento para hacer un ETL
+Criterios de aceptación: Configurar el DAG para la Universidad De Moron
 Documentar los operators que se deberían utilizar a futuro, teniendo en cuenta que se va a hacer dos consultas SQL (una para cada universidad), se van a procesar los datos con pandas y se van a cargar los datos en S3.  El DAG se debe ejecutar cada 1 hora, todos los días.'''
 
 from datetime import timedelta, datetime
@@ -24,8 +24,8 @@ def load():
 
 
 with DAG(
-    'GFUNRioCuarto_dag_etl',
-    description='Dag ETL Grupo F Universidad Nacional Rio Cuarto',
+    'GFUMoron_dag_etl',
+    description='Dag ETL Grupo F Universidad De Moron',
     schedule_interval=timedelta(hours=1),
     start_date=datetime(2022,9,20)
 ) as dag:
