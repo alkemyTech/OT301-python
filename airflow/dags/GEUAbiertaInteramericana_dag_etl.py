@@ -63,8 +63,6 @@ from os import remove
 
 from pathlib import Path
 
-from os import remove
-
 from boto3.exceptions import S3UploadFailedError
 
 from botocore.exceptions import ClientError
