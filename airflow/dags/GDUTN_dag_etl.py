@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime
 from datetime import timedelta
 import logging
 import pandas as pd
@@ -12,6 +12,7 @@ from airflow.operators.python import PythonOperator
 dag_name = 'GDUTN_dag_etl'
 name_university = 'GDUTN'
 HOME_DIR = Path.home()
+
 
 # Configuración de Logging
 logging.basicConfig(format=f'%(asctime)s - {dag_name} - %(message)s', datefmt='%Y-%m-%d', level=logging.INFO)
@@ -81,8 +82,6 @@ def transform_db():
         logging.info('Successfully transformed filee')
     except:
         logging.warning('Failure to save transformed file')
-    
-
 
 
 with DAG(dag_id=dag_name,
