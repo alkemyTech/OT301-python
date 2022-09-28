@@ -52,8 +52,6 @@ from os import remove
 
 from pathlib import Path
 
-from os import remove
-
 # declare global variables
 airflow_folder = Path(__file__).resolve().parent.parent
 university = 'GEUAbiertaInteramericana'
