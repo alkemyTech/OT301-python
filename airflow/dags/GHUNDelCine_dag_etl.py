@@ -73,7 +73,7 @@ with DAG(
         default_args=default_args,  # This will automatically apply it to any operators bound to it
         description='ETL DAG for University H data',  # Dags description
         start_date=datetime(2022, 9, 20),  # Dag boot date
-        schedule=timedelta(hours=1),  # The dag is going to run every 1 hour
+        schedule_interval=timedelta(hours=1),  # The dag is going to run every 1 hour
         catchup=False
 
 ) as dag:
