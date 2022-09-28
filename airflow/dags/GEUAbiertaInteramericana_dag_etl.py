@@ -176,8 +176,12 @@ def transformation():
 # data load corresponding to the university received as a parameter
 def load(filename: str, key: str, bucket_name: str) -> None:
     try:
+        # connecting to the S3 database
         hook = S3Hook(aws_conn_id='aws_s3_bucket')
+        
+        # upload the file to s3
         hook.load_file(filename=filename, key=key,bucket_name=bucket_name)
+        
         logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Load - load done successfully")
     except ValueError:
         logging.warning('File could already exist in s3 bucket destination. Check it.')
