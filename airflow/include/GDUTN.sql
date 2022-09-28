@@ -8,7 +8,8 @@ select
 	0 as age,
 	null as postal_code,
 	location,
-	email
+	email,
+	birth_date
 
 from
 	training.public.jujuy_utn ju 
