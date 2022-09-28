@@ -26,26 +26,20 @@ cons_handler.setFormatter(log_formatter)
 # add cons_handler to logger
 logger.addHandler(cons_handler)
 
-
 # get current directory (dags)
 dags_path = os.path.dirname(os.path.realpath(__file__))
-print('dags_path',dags_path)
 
 # get airflow directory
 airflow_path=os.path.abspath(os.path.join(dags_path, os.pardir))
-print('airflow_path',os.path.abspath(os.path.join(airflow_path, os.pardir)))
 
 # get include directory
 include_path=airflow_path+'/include/'
-print('include_directory',include_path)
 
 # get files directory
 files_path=airflow_path+'/files/'
-print(files_path)
 
 # get datasets directory
 datasets_path=airflow_path+'/datasets/'
-print(datasets_path)
 
 try:
   reading_query= open(include_path+'GGUJFKenedy.sql','r')
@@ -87,10 +81,7 @@ except KeyError:
 
 
 def data_transformation():
-  pg_hook=PostgresHook(postgres_conn_id='alkemy_db', schema='training')
-  logging.info('Getting PostgresHook on Kennedy')
-  df=pg_hook.get_pandas_df(sql=sql_query)
-  
+  df=pd.read_csv(files_path+'GGUJFKenedy_select.csv')
   # Setting config to change data format as requested. ¡first_name and last_name would remain the same due to a convention!
   df['university']=df['university'].str.lower().str[1:].str.replace('-',' ')
   df['career']=df['career'].str.lower().str.replace('-',' ')
@@ -99,11 +90,13 @@ def data_transformation():
   df['postal_code']=df['postal_code'].astype(str)
   df['email']=df['email'].str.lower().str.replace('-',' ')
   df['age']=df['age'].astype(int)
+  # Tool to add values to age column if the value got from the query is not logic for university applyment.
+  df.loc[df['age'].between(-100,0), 'age'] += 100
   df.drop('location', axis=1, inplace=True)
   df=df.merge(cp_dataframe,on='postal_code',how='left')
   df=df[['university','career','inscription_date','first_name','last_name','gender','age','location','postal_code','email']]
-  processed_csv_file=df.to_csv(datasets_path+'GGUJFKenedy_process.csv',sep=',', index=False)
-  return processed_csv_file
+  processed_txt=df.to_csv(datasets_path+'GGUJFKenedy_process.txt',sep=',', index=False)
+  return processed_txt
 
 def upload_to_s3(filename: str, key: str, bucket_name: str) -> None:
   try:
@@ -130,9 +123,8 @@ with DAG(
   extraction_task=PythonOperator(task_id='kennedy_extract', python_callable=get_data_from_db)
   transformation_task=PythonOperator(task_id='kennedy_transormation', python_callable=data_transformation)
   upload_to_s3_task=PythonOperator(task_id='kennedy_upload', python_callable=upload_to_s3,op_kwargs={
-    'filename':datasets_path+'/GGUJFKenedy_process.csv',
-    'key': 'GGUJFKenedy_process.csv',
+    'filename':datasets_path+'/GGUJFKenedy_process.txt',
+    'key': 'GGUJFKenedy_process.txt',
     'bucket_name': 'cohorte-septiembre-5efe33c6'})
 
   extraction_task >> transformation_task >> upload_to_s3_task
-
