@@ -14,7 +14,6 @@ name_university = 'GDUNTresDeFebrero'
 # Configuración de Logging
 logging.basicConfig(format=f'%(asctime)s - {dag_name} - %(message)s', datefmt='%Y-%m-%d', level=logging.INFO)
 
-
 # Argumentos del DAG
 default_args={
     'owner': 'Alkemy',
@@ -25,7 +24,6 @@ default_args={
 
 logging.info('Iniciando DAG')
 
-POSTGRES_CONN_ID = 'alkemy_db'
 
 def extract_db():
     try:

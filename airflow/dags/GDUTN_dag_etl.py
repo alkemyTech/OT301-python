@@ -34,6 +34,7 @@ def extract_db():
     except:
         logging.warning('Failure in the extraction process')
 
+
 def transform_db():
     pass
 
