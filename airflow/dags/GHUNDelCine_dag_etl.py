@@ -77,7 +77,7 @@ with DAG(
         schedule_interval=timedelta(hours=1),  # The dag is going to run every 1 hour
         catchup=False
 ) as dag:
-    t1 = EmptyOperator(
+    t1 = PythonOperator(
         task_id='Get_data'
     )
     t2 = PythonOperator(
