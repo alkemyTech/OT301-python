@@ -5,6 +5,7 @@ from airflow import DAG
 from airflow.operators.dummy import DummyOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.python import PythonOperator
+from airflow.hooks.S3_hook import S3Hook
 from datetime import timedelta,datetime
 import pandas as pd
 import logging
@@ -22,6 +23,7 @@ default_args = {
 }
 path_dags = path.dirname(path.realpath(__file__)) #Guardo la dirección de este .py
 name_un = 'GBUSalvador'                           #Nombre de la universidad
+dir_txt = path_dags.replace('/dags',f'/datasets/{name_un}_process.txt') #Dirección del .txt procesado
 
 #Defino la función que conectara a la bd y creará el archivo .csv
 def extract():                              
@@ -107,7 +109,14 @@ def transform():
         f.write(dfAsString)
         f.close()
     logging.info('Exported data')
-        
+
+#Defino la función que llevará los datos al bucket de aws   
+def load(filename=str,key=str,bucket_name=str) -> None:
+    logging.info('Upload task started')
+    hook = S3Hook('aws_s3_bucket')
+    hook.load_file(filename=filename,key=key,bucket_name=bucket_name,replace=True)
+    logging.info('Upload task finished')
+
 with DAG(
     'GBUSalvador_dag_etl',
     description = 'ETL para la Universidad Del Salvador',
@@ -118,6 +127,10 @@ with DAG(
 ) as dag:
     extract_task = PythonOperator(task_id='extr',python_callable=extract) #Extracción de datos
     transform_task = PythonOperator(task_id='trans',python_callable=transform)  #Procesamiento con Pandas
-    load = DummyOperator(task_id='load')    #Carga de los datos procesados
+    load_task = PythonOperator(task_id='load',python_callable=load,op_kwargs={
+        'filename':f'{dir_txt}',
+        'key':f'{name_un}_process.txt',
+        'bucket_name':'cohorte-septiembre-5efe33c6'
+    })    #Carga de los datos procesados
 
-    extract_task >> transform_task >> load
+    extract_task >> transform_task >> load_task
