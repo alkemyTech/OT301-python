@@ -192,7 +192,7 @@ def load(filename:str, key:str, bucket_name:str):
     Function that is responsible for uploading the data to amazon s3
     """
     log.info(f'Uploading file to s3 {filename}')
-    hook = S3Hook('')
+    hook = S3Hook(aws_conn_id='aws_s3_bucket')
     log.info('Uploading file')
     hook.load_file(
         filename=filename,
@@ -231,7 +231,7 @@ with DAG(
         python_callable=load,
         op_kwargs={
             'filename': f'{dir}/datasets/GHUNDeBuenosAires_process.txt',
-            'key': f'{dir}_process.txt',
+            'key': 'GHUNDeBuenosAires_process.txt',
             'bucket_name': 'cohorte-septiembre-5efe33c6'
         }
     )
