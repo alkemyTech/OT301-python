@@ -76,9 +76,13 @@ with DAG(
         schedule_interval=timedelta(hours=1),  # The dag is going to run every 1 hour
         catchup=False
 ) as dag:
-    t1 = EmptyOperator(
-        task_id='Get_data'
+
+    t1 = PythonOperator(
+        task_id='Get_data',
+        dag=dag,
+        python_callable=extract
     )
+    
     t2 = PythonOperator(
         task_id='transforming_data',
         dag=dag,
@@ -94,3 +98,4 @@ t1 >> t2 >> t3
 
 if __name__ == '__main__':
     extract()
+
