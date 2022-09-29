@@ -84,8 +84,13 @@ def transform_db():
         logging.warning('Failure to save transformed file')
     
 def upload_to_s3(filename:str,key:str,bucket_name:str) -> None:
-    hook = S3Hook('s3_conn')
-    hook.load_file(filename=filename,key=key,bucket_name=bucket_name,replace=True)
+    try:
+        hook = S3Hook('s3_conn')
+        hook.load_file(filename=filename,key=key,bucket_name=bucket_name,replace=True)
+        logging.info('Successful upload to S3')
+    except:
+        logging.warning('failure in the process of loading to S3')
+
 
 
 with DAG(dag_id=dag_name,
