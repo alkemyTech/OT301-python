@@ -8,7 +8,8 @@ select
 	0 as age,
 	codigo_postal as postal_code,
 	null as location,
-	correos_electronicos as email
+	correos_electronicos as email,
+	birth_dates
 
 from
 	training.public.palermo_tres_de_febrero ptdf
