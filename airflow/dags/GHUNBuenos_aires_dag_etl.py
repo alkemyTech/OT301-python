@@ -1,12 +1,11 @@
-from cmath import e
 from datetime import timedelta, datetime
-from os import path
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 import logging as log
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from pathlib import Path
 import pandas as pd
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
 # Files
 dir = Path(__file__).resolve().parent.parent
@@ -188,11 +187,20 @@ def save_df_text(df):
         log.error(f'Directory not found: {e}')
 
 
-def load():
+def load(filename:str, key:str, bucket_name:str):
     """
     Function that is responsible for uploading the data to amazon s3
     """
-    print('Uploaded to s3')
+    log.info(f'Uploading file to s3 {filename}')
+    hook = S3Hook('')
+    log.info('Uploading file')
+    hook.load_file(
+        filename=filename,
+        key=key,
+        bucket_name=bucket_name,
+        replace=True
+    )
+    log.info('File uploaded to s3 successfully')
 
 
 with DAG(
@@ -220,7 +228,12 @@ with DAG(
     t3 = PythonOperator(
         task_id='Uploading_to_s3',
         dag=dag,
-        python_callable=load
+        python_callable=load,
+        op_kwargs={
+            'filename': f'{dir}/datasets/GHUNDeBuenosAires_process.txt',
+            'key': f'{dir}_process.txt',
+            'bucket_name': 'cohorte-septiembre-5efe33c6'
+        }
     )
 
 t1 >> t2 >> t3
