@@ -1,3 +1,4 @@
+--Sentencia sql para substraer la información y estructura de la Universidad Nacional Del Comahue
 	SELECT 
 universidad as university, 
 carrera as career, 
@@ -8,7 +9,8 @@ sexo as gender,
 -1 as age, 
 codigo_postal as postal_code, 
 ' ' as location, 
-correo_electronico as email
+correo_electronico as email,
+fecha_nacimiento
 	FROM 
 public.flores_comahue
 	WHERE 
