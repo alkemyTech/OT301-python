@@ -5,6 +5,7 @@ from airflow import DAG
 from airflow.operators.dummy import DummyOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.python import PythonOperator
+from airflow.hooks.S3_hook import S3Hook
 from datetime import timedelta,datetime
 import pandas as pd
 import logging
@@ -22,6 +23,7 @@ default_args = {
 }
 path_dags = path.dirname(path.realpath(__file__)) #Guardo la dirección de este .py
 name_un = 'GBUSalvador'                           #Nombre de la universidad
+dir_txt = path_dags.replace('/dags',f'/datasets/{name_un}_process.txt') #Dirección del .txt procesado
 
 #Defino la función que conectara a la bd y creará el archivo .csv
 def extract():                              
@@ -107,6 +109,64 @@ def transform():
         f.write(dfAsString)
         f.close()
     logging.info('Exported data')
+
+#Defino la función que llevará los datos al bucket de aws   
+def load(filename=str,key=str,bucket_name=str) -> None:
+    logging.info('Upload task started')
+    hook = S3Hook('aws_s3_bucket')
+    hook.load_file(filename=filename,key=key,bucket_name=bucket_name,replace=True)
+    logging.info('Upload task finished')
+
+    #Función para la transformación de fechas
+    def date_transform(x):
+        y = int(x[7:])
+        y_limit = 9       #Año de nacimiento (edad mas joven 10 años, mas viejo 91) (entre el 1929 y el 10)
+        if y <= y_limit:     
+            old_y = x[7:]
+            new_y = x.replace(f'-{old_y}',f'-20{old_y}')
+            return new_y
+        else:
+            old_y = x[7:]
+            new_y = x.replace(f'-{old_y}',f'-19{old_y}')
+            return new_y
+    for x in range(df.fecha_nacimiento.size):
+        df.fecha_nacimiento[x] = date_transform(df.fecha_nacimiento[x])
+    
+    #Genero los datos de la columna 'age'
+    df['age'] = pd.to_datetime(df.inscription_date) - pd.to_datetime(df.fecha_nacimiento)
+    df['age']=df.age.astype(int)
+    df['age'] = (df.age / (10**9) / 3600 / 24 /365.2425).astype(int)
+                #nanoseg   a seg   a h    a d   a años
+    
+    #Genero el df con el csv de los códigos postales
+    df2 = pd.read_csv(path_dags.replace('/dags',f'/assets/codigos_postales.csv'))
+    df2 = df2.drop_duplicates(subset=['localidad'],keep='first')
+    df2.localidad = df2.localidad.str.lower()
+    #Completo los códigos postales sabiendo la localidad
+    count=0
+    for x in df.location:
+        index_df2 = df2.index[df2['localidad'] == x]
+        df.postal_code[count] = df2.codigo_postal[index_df2]
+        count = count + 1
+
+    #Termino por dar formato solicitado a las fechas y eliminar columnas no pedidas
+    count = 0
+    for x in df.inscription_date:
+        year = x[7:]
+        month = x[3:6]
+        day = x[:2]
+        new_date = f'{year}-{month}-{day}'
+        df.inscription_date[count] = new_date
+        count = count + 1
+    df = df.drop(['Unnamed: 0','fecha_nacimiento'], axis=1)
+    logging.info('Processed data')
+
+    #Exporto los resultados a la carpeta y en el formato solicitado
+    with open(path_dags.replace('/dags',f'/datasets/{name_un}_process.txt'), 'a') as f:
+        dfAsString = df.to_string(header=True, index=False)
+        f.write(dfAsString)
+        f.close()
+    logging.info('Exported data')
         
 with DAG(
     'GBUSalvador_dag_etl',
@@ -118,6 +178,10 @@ with DAG(
 ) as dag:
     extract_task = PythonOperator(task_id='extr',python_callable=extract) #Extracción de datos
     transform_task = PythonOperator(task_id='trans',python_callable=transform)  #Procesamiento con Pandas
-    load = DummyOperator(task_id='load')    #Carga de los datos procesados
+    load_task = PythonOperator(task_id='load',python_callable=load,op_kwargs={
+        'filename':f'{dir_txt}',
+        'key':f'{name_un}_process.txt',
+        'bucket_name':'cohorte-septiembre-5efe33c6'
+    })    #Carga de los datos procesados
 
-    extract_task >> transform_task >> load
+    extract_task >> transform_task >> load_task
