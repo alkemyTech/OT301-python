@@ -31,7 +31,16 @@ Datos Finales:
 - email: str minúsculas, sin espacios extras, ni guiones
 Aclaraciones:
 Para calcular codigo postal o locación se va a utilizar el .csv que se encuentra en el repo.
-La edad se debe calcular en todos los casos'''
+La edad se debe calcular en todos los casos
+
+OT301-77
+QUIERO: Utilizar un operador creado por la comunidad
+PARA: poder subir el txt creado por el operador de Python al S3
+Criterios de aceptación: 
+- Tomar el .txt del repositorio base 
+- Buscar un operador creado por la comunidad que se adecue a los datos.
+- Configurar el S3 Operator para la Universidad Nacional De La Pampa
+- Subir el archivo a S3'''
 
 from datetime import timedelta, datetime, date
 
@@ -43,6 +52,8 @@ from airflow.operators.python import PythonOperator
 
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
+from airflow.hooks.S3_hook import S3Hook
+
 import pandas as pd
 
 import logging
@@ -50,6 +61,10 @@ import logging
 from os import remove
 
 from pathlib import Path
+
+from boto3.exceptions import S3UploadFailedError
+
+from botocore.exceptions import ClientError
 
 # declare global variables
 airflow_folder = Path(__file__).resolve().parent.parent
@@ -152,10 +167,23 @@ def transformation():
 
 
 # data load corresponding to the university received as a parameter
-def load():
+def load(filename: str, key: str, bucket_name: str) -> None:
     try:
-        # implementation of the function
+        # connecting to the S3 database
+        hook = S3Hook(aws_conn_id='aws_s3_bucket')
+        
+        # upload the file to s3
+        hook.load_file(filename=filename, key=key,bucket_name=bucket_name)
+        
         logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Load - load done successfully")
+    except ValueError:
+        logging.warning('File could already exist in s3 bucket destination. Check it.')
+    except FileNotFoundError:
+        logging.warning('Could not find the file')
+    except S3UploadFailedError:
+        logging.error('Bucket destination does not exist. Please check its name either on aws or in the code.')
+    except ClientError:
+        logging.error('Error connecting to Bucket. Check for Admin->Connections->aws_s3_bucket Key and SecretKey loaded data.')
     except:
         logging.warning(f"{date.today().year}-{date.today().month}-{date.today().day} - Load - load was not performed correctly")
 
@@ -181,7 +209,16 @@ with DAG(
         python_callable=transformation
     )
     
-    load = DummyOperator(task_id='load')
+    load = PythonOperator(
+        task_id='load',
+        dag=dag,
+        python_callable=load,
+        op_kwargs={
+            'filename': f'{airflow_folder}/datasets/{university}_process.txt',
+            'key': f'{university}_process.txt',
+            'bucket_name': 'cohorte-septiembre-5efe33c6',
+        }
+    )
 
 
     extraction >> transformation >> load

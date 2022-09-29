@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> main
 ;university;career;inscription_date;first_name;last_name;gender;age;postal_code;location;email
 0;Universidad nacional de la pampa;Licenciatura en musicoterapia;22/01/2021;;Brett roberts;M;17/08/2000;3232;;Deannalarson@hotmail.com
 1;Universidad nacional de la pampa;Licenciatura en gestión de agroalimentos;14/01/2021;;Mckenzie mclaughlin;F;20/12/2006;1629;;Turnerjames@hotmail.com
@@ -1816,6 +1819,8 @@
 1813;Universidad nacional de la pampa;Licenciatura en sociología ;24/12/2020;;Susan sanchez;F;21/07/1941;5306;;Jeremiahwillis@hotmail.com
 1814;Universidad nacional de la pampa;Medicina;28/10/2020;;Rebecca guzman;F;19/01/2017;7406;;Youngalec@gmail.com
 1815;Universidad nacional de la pampa;Diseño industrial;24/09/2020;;Gregory perry;M;08/05/1922;5543;;Derek79@yahoo.com
+<<<<<<< HEAD
+=======
 =======
 ;fechaiscripccion;university;carrerra;first_name;last_name;gender;age;postal_code;location;email
 0;22/01/2021;Universidad nacional de la pampa;Licenciatura en musicoterapia;;Brett roberts;M;;3232;;Deannalarson@hotmail.com
@@ -3634,4 +3639,5 @@
 1813;24/12/2020;Universidad nacional de la pampa;Licenciatura en sociología ;;Susan sanchez;F;;5306;;Jeremiahwillis@hotmail.com
 1814;28/10/2020;Universidad nacional de la pampa;Medicina;;Rebecca guzman;F;;7406;;Youngalec@gmail.com
 1815;24/09/2020;Universidad nacional de la pampa;Diseño industrial;;Gregory perry;M;;5543;;Derek79@yahoo.com
+>>>>>>> main
 >>>>>>> main

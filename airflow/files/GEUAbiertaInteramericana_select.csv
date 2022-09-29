@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> main
 ;university;career;inscription_date;first_name;last_name;gender;age;postal_code;location;email
 0;-universidad-abierta-interamericana;Licenciatura-en-kinesiología-y-fisiatría;21/Jan/08;;Randy-williams;M;47/May/17;;Juan-maria-gutierrez;Joshua07@yahoo.com
 1;-universidad-abierta-interamericana;Licenciatura-en-ciencias-ambientales;20/Oct/04;;Nichole-stanley;F;90/Feb/07;;El-rincon;Dbutler@yahoo.com
@@ -1860,6 +1863,8 @@
 1857;-universidad-abierta-interamericana;Medicina;20/Sep/02;;Jacob-faulkner;M;67/Jul/07;;Arsenal-de-guerra-san-lorenzo;Hansenkyle@yahoo.com
 1858;-universidad-abierta-interamericana;Ingeniería-en-informática;21/Jan/20;;Megan-lester;F;62/Jun/10;;Campo-redondo;Taylorluna@gmail.com
 1859;-universidad-abierta-interamericana;Licenciatura-en-ciencia-política-;20/Nov/07;;Megan-sanchez;F;87/Jun/14;;Britos;Qherring@yahoo.com
+<<<<<<< HEAD
+=======
 =======
 ;inscription_dates;university;carrera;first_name;last_name;gender;age;postal_code;location;email
 0;21/Jan/08;-universidad-abierta-interamericana;Licenciatura-en-kinesiología-y-fisiatría;;Randy-williams;M;;;Juan-maria-gutierrez;Joshua07@yahoo.com
@@ -3722,4 +3727,5 @@
 1857;20/Sep/02;-universidad-abierta-interamericana;Medicina;;Jacob-faulkner;M;;;Arsenal-de-guerra-san-lorenzo;Hansenkyle@yahoo.com
 1858;21/Jan/20;-universidad-abierta-interamericana;Ingeniería-en-informática;;Megan-lester;F;;;Campo-redondo;Taylorluna@gmail.com
 1859;20/Nov/07;-universidad-abierta-interamericana;Licenciatura-en-ciencia-política-;;Megan-sanchez;F;;;Britos;Qherring@yahoo.com
+>>>>>>> main
 >>>>>>> main
