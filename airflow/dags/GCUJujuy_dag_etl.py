@@ -67,6 +67,7 @@ with DAG(
 #Tasks execution
     extraccion_task = PythonOperator(task_id='extraccion', python_callable= extraccion)
     transformacion_task =PythonOperator(task_id='transformacion', python_callable= transformacion)
+
     cargando_task = DummyOperator(task_id='cargando')
 
 
