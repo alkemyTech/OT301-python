@@ -28,8 +28,6 @@ default_args={
 logging.info('Iniciando DAG')
 
 
-POSTGRES_CONN_ID = 'alkemy_db'
-
 def extract_db():
     try:
         with open(f'{HOME_DIR}/OT301-python/airflow/include/{name_university}.sql', 'r') as sqlfile:
