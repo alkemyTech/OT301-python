@@ -6,7 +6,7 @@ from airflow.operators.dummy import DummyOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.python import PythonOperator
 from datetime import timedelta,datetime
-from pandas import DataFrame
+import pandas as pd
 import logging
 from os import path
 
@@ -41,7 +41,46 @@ def extract():
 
 #Defino la función que procesara los datos de la universidad
 def transform():
-    pass
+    #Genero el dataframe base sobre el que transgormare los datos del csv
+    df = pd.read_csv(path_dags.replace('/dags',f'/files/{name_un}_select.csv'))
+    logging.info('Loaded data')
+    #Correción de formato de texto
+    df['university'] = df['university'].str.lower()
+    df['university'] = df['university'].str.replace('_',' ')
+    df['career'] = df['career'].str.lower()
+    df['career'] = df['career'].str.replace('_',' ')
+    df['last_name'] = df['last_name'].str.lower()
+    df['last_name'] = df['last_name'].str.replace('_',' ')
+    df['gender'] = df['gender'].str.replace('M','male')
+    df['gender'] = df['gender'].str.replace('F','female')
+    df['email'] = df['email'].str.lower()
+    
+    #Genero los datos de la columna 'age'
+    df['age'] = pd.to_datetime(df.inscription_date) - pd.to_datetime(df.fecha_nacimiento)
+    df['age']=df.age.astype(int)
+    df['age'] = (df.age / (10**9) / 3600 / 24 /365.2425).astype(int)
+                #nanoseg   a seg   a h    a d   a años
+    
+    #Genero el df con el csv de los códigos postales (acá limpiar duplicados perjudica)
+    df2 = pd.read_csv(path_dags.replace('/dags',f'/assets/codigos_postales.csv'))
+    df2.localidad = df2.localidad.str.lower()
+    #Completo los códigos postales sabiendo la localidad
+    count = 0
+    for x in df.postal_code:
+        index_df2 = df2.index[df2['codigo_postal'] == x][0]
+        df.location[count] = df2.localidad[index_df2]
+        count = count + 1
+
+    #Termino por eliminar columnas no pedidas
+    df = df.drop(['Unnamed: 0','fecha_nacimiento'], axis=1)
+    logging.info('Processed data')
+
+    #Exporto los resultados a la carpeta y en el formato solicitado
+    with open(path_dags.replace('/dags',f'/datasets/{name_un}_process.txt'), 'a') as f:
+        dfAsString = df.to_string(header=True, index=False)
+        f.write(dfAsString)
+        f.close()
+    logging.info('Exported data')
 
 with DAG(
     'GBUNComahue_dag_etl',
