@@ -1,5 +1,4 @@
 --Sentencia sql para substraer la información y estructura de la Universidad Del Salvador
---según lo indicado en OT301-14
 	SELECT 
 universidad as university,
 carrera as career,
@@ -10,7 +9,8 @@ sexo as gender,
 -1 as age,
 -1 as postal_code,
 localidad as location,
-email
+email,
+fecha_nacimiento
 	FROM 
 public.salvador_villa_maria
 	where
