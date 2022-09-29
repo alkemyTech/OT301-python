@@ -37,6 +37,7 @@ def extract_db():
     except:
         logging.warning('Failure in the extraction process')
 
+
 def transform_db():
     try:
         df_selec = pd.read_csv(f'{HOME_DIR}/OT301-python/airflow/file/{name_university}_select.csv')

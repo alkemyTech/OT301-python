@@ -1,28 +1,5 @@
 '''COMO: Analista de Datos
-
-OT 301-25
-QUIERO: Configurar un DAG, sin consultas, ni procesamiento
-PARA: Hacer un ETL para 2 universidades distintas.
-Criterios de aceptación: 
-Configurar el DAG para procese la Universidad Abierta Interamericana
-Documentar los operators que se deberían utilizar a futuro, teniendo en cuenta que se va a hacer dos consultas SQL (una para cada universidad), se van a procesar los datos con pandas y se van a cargar los datos en S3.  El DAG se debe ejecutar cada 1 hora, todos los días.
-
-OT301-33
-QUIERO: Configurar los retries con la conexión al a base de datos
-PARA: poder intentar nuevamente si la base de datos me produce un error
-Criterios de aceptación: 
-Configurar el retry para las tareas del DAG de la Universidad Abierta Interamericana
-
-OT301-41
-QUIERO: Configurar los log 
-PARA: Mostrarlos en consola
-Criterios de aceptación:
-- Configurar logs para Universidad Abierta Interamericana
-- Use la librería de Loggin de python: https://docs.python.org/3/howto/logging.html
-- Realizar un log al empezar cada DAG con el nombre del logger
-- Formato del log: %Y-%m-%d - nombre_logger - mensaje 
-Aclaración: 
-Deben dejar la lista de configuración para que se pueda incluir dentro de las funciones futuras. No es necesario empezar a escribir registros.
+Sprint 1: OT301-25 OT301-33 OT301-41
 
 OT301-49
 QUIERO: Implementar SQL Operator
@@ -35,7 +12,27 @@ OT301-57
 QUIERO: Implementar el Python Operator
 PARA: procesar los datos obtenidos de la base de datos dentro del DAG
 Criterios de aceptación: 
-Configurar el Python Operator para que ejecute la función que procese los datos para la Universidad Abierta Interamericana'''
+Configurar el Python Operator para que ejecute la función que procese los datos para la Universidad Abierta Interamericana
+
+OT301-65
+QUIERO: Crear una función Python con Pandas para cada universidad
+PARA: poder normalizar los datos de las mismas
+Criterios de aceptación: 
+Una funcion que devuelva un txt para cada una de launiversidad Abierta Interamericana
+Datos Finales:
+- university: str minúsculas, sin espacios extras, ni guiones
+- career: str minúsculas, sin espacios extras, ni guiones
+- inscription_date: str %Y-%m-%d format
+- first_name: str minúscula y sin espacios, ni guiones
+- last_name: str minúscula y sin espacios, ni guiones
+- gender: str choice(male, female)
+- age: int
+- postal_code: str
+- location: str minúscula sin espacios extras, ni guiones
+- email: str minúsculas, sin espacios extras, ni guiones
+Aclaraciones:
+Para calcular codigo postal o locación se va a utilizar el .csv que se encuentra en el repo.
+La edad se debe calcular en todos los casos'''
 
 from datetime import timedelta, datetime, date
 
@@ -51,9 +48,13 @@ import pandas as pd
 
 import logging
 
+from os import remove
+
 from pathlib import Path
 
-from os import remove
+# declare global variables
+airflow_folder = Path(__file__).resolve().parent.parent
+university = 'GEUAbiertaInteramericana'
 
 # Declare the dag arguments
 
@@ -69,10 +70,8 @@ default_args = {
 
 # Functions to execute when using the DAGS, at this moment they are not called because the DummyOpertors do not allow it
 
+# Extraction of the required data from the university associated with the database
 def extraction():
-    # Extraction of the required data from the university associated with the database
-    airflow_folder = Path(__file__).resolve().parent.parent
-    university = 'GEUAbiertaInteramericana'
     try:
         # Reading the query for this particular university
         file_sql = open(f'{airflow_folder}/include/{university}.sql','r')
@@ -100,23 +99,72 @@ def extraction():
         logging.warning(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - extraction was not performed correctly")
 
 
-
+# Processing of data associated with the university
 def transformation():
-    # Processing of data associated with the university
     try:
-        # implementation of the function
-        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - transformation done successfully")
+        # reading the csv file extracted from the database
+        df = pd.read_csv(f'{airflow_folder}/files/{university}_select.csv', sep=';')
+
+        # college enrollment age is calculated
+        df['age'] = pd.to_datetime(df['age'], yearfirst=True)
+        df['inscription_date'] = pd.to_datetime(df['inscription_date'], yearfirst=True)
+        for i in range(0,len(df)):
+            if df.loc[i,'age'].year > 2006:
+                df.loc[i,'year'] = df.loc[i,'age'].year - 100
+                df.loc[i,'age'] = datetime(int(df.loc[i,'year']), df.loc[i,'age'].month, df.loc[i,'age'].day)
+        df['age'] = df['inscription_date']-df['age']
+        df['age'] = (df['age'].dt.days/365.25).astype(int)
+
+        # the parameters university, carrer, inscription_date, gender and email are accommodated as requested
+        df['university'] = df['university'].str.lower().str.replace('-',' ').str.rstrip().str.lstrip()
+        df['career'] = df['career'].str.lower().str.replace('-',' ').str.rstrip().str.lstrip()
+        df['inscription_date'] = df['inscription_date'].astype(str)
+        df['gender'] = df['gender'].replace({'F':'female','M':'male'})
+        df['email'] = df['email'].str.lower().str.rstrip().str.lstrip()
+
+        # the name is separated and the format is accommodated
+        name = df['last_name'].str.lower().str.rstrip().str.lstrip().str.split('-').to_list()
+        columns = ['first_name','last_name','-','-']
+        name = pd.DataFrame(name, columns=columns)
+        df['first_name'] = name['first_name']
+        df['last_name'] = name['last_name']
+
+        # the missing location parameter is filled according to the "postal codes" file located in the assets
+        file = f'{airflow_folder}/assets/codigos_postales.csv'
+        df_cp = pd.read_csv(file, sep=',')
+        df_cp.rename({'codigo_postal':'postal_code'}, axis=1, inplace=True)
+        df_cp.rename({'localidad':'location'}, axis=1, inplace=True)
+        df_cp.drop_duplicates(subset='location')
+        df_cp['location'] = df_cp['location'].str.lower().str.rstrip().str.lstrip()
+        df['location'] = df['location'].str.lower().str.replace('-',' ').str.rstrip().str.lstrip()
+        df.drop('postal_code', axis=1, inplace=True)
+        df = df.merge(df_cp, on='location', how='left')
+
+        # leave the columns that interest me for the file
+        df=df[['university','career','inscription_date','first_name','last_name','gender','age','postal_code','location','email']]
+
+        # If it exists, I delete the file generated previously to update the information.
+        try:
+            remove(f'{airflow_folder}/datasets/{university}_process.txt')
+        except:
+            pass
+
+
+        # export to a .txt file in the folder suggested in the issue
+        df.to_csv(f'{airflow_folder}/datasets/{university}_process.txt', sep=';')
+
+        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Process- transformation done successfully")
     except:
-        logging.warning(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - transformation was not performed correctly")
+        logging.warning(f"{date.today().year}-{date.today().month}-{date.today().day} - Process - transformation was not performed correctly")
 
 
+# data load corresponding to the university received as a parameter
 def load():
-    # data load corresponding to the university received as a parameter
     try:
         # implementation of the function
-        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - load done successfully")
+        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Load - load done successfully")
     except:
-        logging.warning(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - load was not performed correctly")
+        logging.warning(f"{date.today().year}-{date.today().month}-{date.today().day} - Load - load was not performed correctly")
 
 
 
