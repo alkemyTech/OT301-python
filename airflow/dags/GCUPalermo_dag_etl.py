@@ -62,12 +62,13 @@ with DAG(
     catchup=False
     ) as dag:
 
-#Ejecucion de tareas
+#Tasks execution
     extraccion_task = PythonOperator(task_id='extraccion', python_callable= extraccion)
-    transformacion_task = DummyOperator(task_id='transformacion')
+    transformacion_task = PythonOperator(task_id='transformacion', python_callable= transformacion)
+
     cargando_task = DummyOperator(task_id='cargando')
 
 
     extraccion_task >> transformacion_task >> cargando_task
 
-    
+

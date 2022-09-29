@@ -44,7 +44,12 @@ def extraccion():
 
 #Transformation task, to set    
 def transformacion():
-    logging.info("Transformando datos")
+    try:
+        logging.info("Processing data.")
+
+    except:
+        logging.warning
+        (f"-Task did not perform as expected.")
 
 #Loading task, to set
 def cargando():
@@ -61,8 +66,10 @@ with DAG(
 
 #Tasks execution
     extraccion_task = PythonOperator(task_id='extraccion', python_callable= extraccion)
-    transformacion_task = DummyOperator(task_id='transformacion')
+    transformacion_task =PythonOperator(task_id='transformacion', python_callable= transformacion)
+
     cargando_task = DummyOperator(task_id='cargando')
 
 
     extraccion_task >> transformacion_task >> cargando_task
+
