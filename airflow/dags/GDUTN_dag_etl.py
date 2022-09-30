@@ -85,7 +85,7 @@ def transform_db():
     
 def upload_to_s3(filename:str,key:str,bucket_name:str) -> None:
     try:
-        hook = S3Hook('s3_conn')
+        hook = S3Hook('aws_s3_bucket')
         hook.load_file(filename=filename,key=key,bucket_name=bucket_name,replace=True)
         logging.info('Successful upload to S3')
     except:
