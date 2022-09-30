@@ -11,6 +11,7 @@ from airflow.operators.python import PythonOperator
 
 dag_name = 'GDUNTresDeFebrero_dag_etl'
 name_university = 'GDUNTresDeFebrero'
+
 HOME_DIR = Path.home()
 
 # Configuración de Logging
@@ -26,7 +27,6 @@ default_args={
 
 logging.info('Iniciando DAG')
 
-POSTGRES_CONN_ID = 'alkemy_db'
 
 def extract_db():
     try:
