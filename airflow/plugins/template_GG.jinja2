@@ -95,10 +95,7 @@ def data_transformation():
       df['gender']=df['gender'].replace(['M','F'],['male','female'])
       df['location']=df['location'].str.lower().str.replace('-',' ')
       df['email']=df['email'].str.lower().str.replace('-',' ')
-      df['age']=df['age'].astype(int)
-      df.drop('postal_code', axis=1, inplace=True)
-      df=df.merge(cp_dataframe,on='location',how='left')
-      df=df[['university','career','inscription_date','first_name','last_name','gender','age','location','postal_code','email']]
+      df['age']=df['age'].astype(int)    
     except KeyError:
       logging.error('Check the names of the columns (Function vs {{ official_name }}_select.csv file')
     processed_txt=df.to_csv(datasets_path+'{{ official_name }}_process.txt',sep=',', index=False)
@@ -114,11 +111,22 @@ def data_transformation():
       df['age']=df['age'].astype(int)
       # Tool to add values to age column if the value got from the query is not logic for university applyment.
       df.loc[df['age'].between(-100,0), 'age'] += 100
+    except KeyError:
+      logging.error('Check the names of the columns (Function vs {{ official_name }}_select.csv file).')
+  if ('{{ missing_data }}' == 'postal_code'):
+    try:
+      df.drop('postal_code', axis=1, inplace=True)
+      df=df.merge(cp_dataframe,on='location',how='left')
+      df=df[['university','career','inscription_date','first_name','last_name','gender','age','location','postal_code','email']]
+    except KeyError:
+      logging.error('Check the names of the columns (Function vs {{ official_name }}_select.csv file).')
+  elif('{{ missing_data }}' == 'location'):
+    try:
       df.drop('location', axis=1, inplace=True)
       df=df.merge(cp_dataframe,on='postal_code',how='left')
       df=df[['university','career','inscription_date','first_name','last_name','gender','age','location','postal_code','email']]
     except KeyError:
-      logging.error('Check the names of the columns (Function vs {{ official_name }}_select.csv file).')
+      logging.error('Check the names of the columns (Function vs GGUJFKenedy_select.csv file).')
     processed_txt=df.to_csv(datasets_path+'{{ official_name }}_process.txt',sep=',', index=False)
     logging.info('{{ official_name }}_process.txt file created!')
     return processed_txt
