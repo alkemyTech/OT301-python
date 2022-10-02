@@ -11,5 +11,5 @@ for filename in os.listdir(file_dir):
     if filename.endswith('.yaml'):
         with open (f'{file_dir}/{filename}','r') as configfile:
             config=yaml.safe_load(configfile)
-            with open(f"{file_dir}/{config['dag_id']}_pruebas.py","w") as f:
+            with open(f"{file_dir}/{config['dag_id']}_dag_etl.py","w") as f:
                 f.write(template.render(config))
