@@ -98,8 +98,6 @@ def data_transformation():
       df['age']=df['age'].astype(int)    
     except KeyError:
       logging.error('Check the names of the columns (Function vs {{ official_name }}_select.csv file')
-    processed_txt=df.to_csv(datasets_path+'{{ official_name }}_process.txt',sep=',', index=False)
-    return processed_txt
   elif ('{{ date_format }}' == 'YY-Mon-DD'):
     try:
       df['university']=df['university'].str.lower().str[1:].str.replace('-',' ')
@@ -127,9 +125,9 @@ def data_transformation():
       df=df[['university','career','inscription_date','first_name','last_name','gender','age','location','postal_code','email']]
     except KeyError:
       logging.error('Check the names of the columns (Function vs GGUJFKenedy_select.csv file).')
-    processed_txt=df.to_csv(datasets_path+'{{ official_name }}_process.txt',sep=',', index=False)
-    logging.info('{{ official_name }}_process.txt file created!')
-    return processed_txt
+  processed_txt=df.to_csv(datasets_path+'{{ official_name }}_process.txt',sep=',', index=False)
+  logging.info('{{ official_name }}_process.txt file created!')
+  return processed_txt
 
 
 def upload_to_s3(filename: str, key: str, bucket_name: str) -> None:
