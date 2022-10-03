@@ -1,0 +1,248 @@
+''' OT301-89
+COMO: Analista de datos
+QUIERO: Arreglar un Dag dinamico
+PARA: Poder ejecutarlos normalmente
+Criterios de aceptación: 
+- El DAG a arreglar es el que procesa las siguientes universidades:
+- Universidad Nacional De La Pampa
+- Universidad Abierta Interamericana- Se debe arreglar el DAG factory
+- No se debe tocar la lógica de procesamiento o negocio'''
+
+from datetime import timedelta, datetime, date
+
+from airflow import DAG
+
+from airflow.operators.dummy import DummyOperator
+
+from airflow.operators.python import PythonOperator
+
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+
+from airflow.hooks.S3_hook import S3Hook
+
+import pandas as pd
+
+import logging
+
+from os import remove
+
+from pathlib import Path
+
+from boto3.exceptions import S3UploadFailedError
+
+from botocore.exceptions import ClientError
+
+
+# declare global variables
+airflow_folder = Path(__file__).resolve().parent.parent
+university = '{{ dag_id }}'
+
+
+# Declare the dag arguments
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries':5,
+    'retry_delay': timedelta(minutes=5),
+}
+
+
+# Functions to execute when using the DAGS, at this moment they are not called because the DummyOpertors do not allow it
+
+# Extraction of the required data from the university associated with the database
+def extraction():
+    try:
+        # Reading the query for this particular university
+        file_sql = open(f'{airflow_folder}/include/{university}.sql','r')
+        query = file_sql.read()
+        file_sql.close()
+
+        # connecting to the database
+        hook = PostgresHook(postgres_conn_id='alkemy_db')
+
+        # execution of the query to save in a pandas dataframe
+        df = hook.get_pandas_df(query)
+
+        # If it exists, I delete the file generated previously to update the information.
+        try:
+            remove(f'{airflow_folder}/files/{university}_select.csv')
+        except:
+            pass
+
+        # export to a .csv file in the folder suggested in the issue
+        df.to_csv(f'{airflow_folder}/files/{university}_select.csv',sep=';')
+
+        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - extraction done successfully")
+
+    except:
+        logging.warning(f"{date.today().year}-{date.today().month}-{date.today().day} - Start SQL - extraction was not performed correctly")
+
+
+# Processing of data associated with the university
+def transformation():
+    try:
+        # reading the csv file extracted from the database
+        df = pd.read_csv(f'{airflow_folder}/files/{university}_select.csv', sep=';')
+
+        # college enrollment age is calculated
+
+        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Process- Date transformation")
+
+        # if the format of the .csv file is YY/Mon/DD
+        if df['age'].loc[0].__len__() == 9:
+            df['age'] = pd.to_datetime(df['age'], yearfirst=True)
+            df['inscription_date'] = pd.to_datetime(df['inscription_date'], yearfirst=True)
+            for i in range(0,len(df)):
+                if df.loc[i,'age'].year > 2006:
+                    df.loc[i,'year'] = df.loc[i,'age'].year - 100
+                    df.loc[i,'age'] = datetime(int(df.loc[i,'year']), df.loc[i,'age'].month, df.loc[i,'age'].day)
+            df['age'] = df['inscription_date']-df['age']
+            df['age'] = (df['age'].dt.days/365.25).astype(int)
+
+        # if the format of the .csv file is DD/MM/YYYY
+        elif df['age'].loc[0].__len__() == 10:
+            df['age'] = pd.to_datetime(df['age'],dayfirst=True)
+            df['inscription_date'] = pd.to_datetime(df['inscription_date'], dayfirst=True)
+            df['age'] = df['inscription_date']-df['age']
+            df['age'] = (df['age'].dt.days/365.25).astype(int)
+
+        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Process- Date transformation done successfully")
+
+        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Process- university, career, inscription_date,gender and email transformation")
+        
+        # the parameters university, carrer, inscription_date, gender and email are accommodated as requested
+        df['university'] = df['university'].str.lower().str.replace('-',' ').str.rstrip().str.lstrip()
+        df['career'] = df['career'].str.lower().str.replace('-',' ').str.rstrip().str.lstrip()
+        df['inscription_date'] = df['inscription_date'].astype(str)
+        df['gender'] = df['gender'].replace({'F':'female','M':'male'})
+        df['email'] = df['email'].str.lower().str.rstrip().str.lstrip()
+
+        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Process- university, career, inscription_date,gender and email transformation done successfully")
+
+        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Process- name transformation")
+
+        # the name is separated and the format is accommodated
+        name = df['last_name'].str.lower().str.rstrip().str.lstrip()
+        # check how the first and last name are separated
+        if name.loc[0].__contains__('-'): 
+            name = name.str.split('-').to_list()
+        else:
+            name = name.str.split(' ').to_list()
+        columns = ['first_name','last_name','-','-']
+        name = pd.DataFrame(name, columns=columns)
+        df['first_name'] = name['first_name']
+        df['last_name'] = name['last_name']
+
+        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Process- name transformation done successfully")
+
+        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Process- Postal Code and location transformation")
+
+        # the missing location parameter is filled according to the "postal codes" file located in the assets
+        file = f'{airflow_folder}/assets/codigos_postales.csv'
+        df_cp = pd.read_csv(file, sep=',')
+        df_cp.rename({'codigo_postal':'postal_code'}, axis=1, inplace=True)
+        df_cp.rename({'localidad':'location'}, axis=1, inplace=True)
+
+        # check what is the missing data, the location or the postal code
+        if str(df['location'].loc[0]) != 'nan':
+            df_cp.drop_duplicates(subset='location')
+            df_cp['location'] = df_cp['location'].str.lower().str.rstrip().str.lstrip()
+            df['location'] = df['location'].str.lower().str.replace('-',' ').str.rstrip().str.lstrip()
+            df.drop('postal_code', axis=1, inplace=True)
+            df = df.merge(df_cp, on='location', how='left')
+
+        elif df['postal_code'].loc[0]>0:
+            df_cp.drop_duplicates(subset='postal_code')
+            df.drop('location', axis=1, inplace=True)
+            df = df.merge(df_cp, on='postal_code', how='left')
+            df['location'] = df['location'].str.lower().str.rstrip().str.lstrip()
+
+
+        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Process- Postal Code and location transformation done succesfully")
+
+        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Process- Format and save the file")
+     
+        # leave the columns that interest me for the file
+        df=df[['university','career','inscription_date','first_name','last_name','gender','age','postal_code','location','email']]
+
+        # If it exists, I delete the file generated previously to update the information.
+        try:
+            remove(f'{airflow_folder}/datasets/{university}_process.txt')
+        except:
+            pass
+
+
+        # export to a .txt file in the folder suggested in the issue
+        df.to_csv(f'{airflow_folder}/datasets/{university}_process.txt', sep=';')
+
+        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Process- transformation done successfully")
+    except:
+        logging.warning(f"{date.today().year}-{date.today().month}-{date.today().day} - Process - transformation was not performed correctly")
+
+
+# data load corresponding to the university received as a parameter
+def load(filename: str, key: str, bucket_name: str) -> None:
+    try:
+        # connecting to the S3 database
+        hook = S3Hook(aws_conn_id='aws_s3_bucket')
+        
+        # upload the file to s3
+        hook.load_file(
+            filename=filename, 
+            key=key,
+            bucket_name=bucket_name,
+            replace=True
+        )
+        
+        logging.info(f"{date.today().year}-{date.today().month}-{date.today().day} - Load - load done successfully")
+    except ValueError:
+        logging.warning('File could already exist in s3 bucket destination. Check it.')
+    except FileNotFoundError:
+        logging.warning('Could not find the file')
+    except S3UploadFailedError:
+        logging.error('Bucket destination does not exist. Please check its name either on aws or in the code.')
+    except ClientError:
+        logging.error('Error connecting to Bucket. Check for Admin->Connections->aws_s3_bucket Key and SecretKey loaded data.')
+    except:
+        logging.warning(f"{date.today().year}-{date.today().month}-{date.today().day} - Load - load was not performed correctly")
+
+
+
+with DAG(
+    dag_id='DD_{{ dag_id }}',
+    description= '{{ description }}',
+    default_args = default_args,
+    schedule_interval=timedelta(hours=1),
+    start_date=datetime(2022,10,1),
+    catchup={{ catchup or False }}
+) as dag:
+
+    # Operators for the tasks requested for the DAG
+
+    extraction = PythonOperator(
+        task_id='extraction',
+        dag=dag,
+        python_callable=extraction
+    )
+
+    transformation = PythonOperator(
+        task_id='transformation',
+        dag=dag,
+        python_callable=transformation
+    )
+
+    load = PythonOperator(
+        task_id='load',
+        dag=dag,
+        python_callable=load,
+        op_kwargs={
+            'filename': f'{airflow_folder}/datasets/{university}_process.txt',
+            'key': f'{university}_process.txt',
+            'bucket_name': 'cohorte-septiembre-5efe33c6',
+        }
+    )
+
+
+    extraction >> transformation >> load
