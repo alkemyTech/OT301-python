@@ -1,0 +1,5 @@
+#Configuración para univerdidad UTN
+
+dag_name: GDUTN_dag_etl
+name_university: GDUTN
+description: Universidad Tecnolgogica Nacional proceso ETL
