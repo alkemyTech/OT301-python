@@ -4,6 +4,11 @@ from airflow import DAG
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+
+from airflow.hooks.S3_hook import S3Hook
+from boto3.exceptions import S3UploadFailedError
+from botocore.exceptions import ClientError
+
 import logging
 from pathlib import Path
 import pandas as pd
@@ -25,6 +30,8 @@ default_args = {
 #Setting information loggers
 sql_path= Path(__file__).resolve().parents[1]
 sql_name= 'GCUJujuy'<<<<<<< OT301-63
+path_txt=(f'./OT301-python/airflow/datasets/{sql_name}_process.txt')
+
 path_txt=(f'./OT301-python/airflow/datasets/{sql_name}_process.txt')
 
 #Setting the extraction task
@@ -96,17 +103,22 @@ def transformacion():
 
 
         df_0.to_csv(f'./OT301-python/airflow/datasets/{sql_name}_process.txt', sep=',')
-
         
     except:
         logging.error
         (f"-File not found.")
 
-
-#Loading task
-def cargando():
+#Setting the task to load and replace (if necessary) the .txt file
+def cargando(filename: str, key: str, bucket_name: str) -> None:
+    try:
+        hook = S3Hook('aws_s3_bucket')
+        hook.load_file(filename=filename, key=key, bucket_name=bucket_name, replace=True)  
     
-    pass
+    except S3UploadFailedError:
+         logging.error('Bucket destination does not exist. Please check its name either on aws or in the code.')
+    except ClientError:
+        logging.error('Error connecting to Bucket. Check for Admin->Connections->aws_s3_bucket Key and SecretKey loaded data.')
+
 
 with DAG(
     dag_id='GCUJujuy_ETL_dag',
@@ -122,7 +134,13 @@ with DAG(
 
     extraccion_task = PythonOperator(task_id='extraccion',dag=dag, python_callable= extraccion)
     transformacion_task = PythonOperator(task_id='transformacion',dag=dag, python_callable= transformacion)
-    cargando_task  = DummyOperator(task_id='cargando')
+    cargando_task = PythonOperator(task_id='cargando', dag=dag, python_callable=cargando,
+    op_kwargs={
+        'filename':f'OT301-python/airflow/datasets/{sql_name}_process.txt',
+        'key':f'{sql_name}_process.txt',
+        'bucket_name':'cohorte-septiembre-5efe33c6'
+    }) 
+
 
     extraccion_task >> transformacion_task >> cargando_task
 
