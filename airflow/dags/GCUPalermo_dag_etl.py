@@ -1,15 +1,19 @@
+
 from datetime import timedelta, datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 import logging
 from airflow.operators.dummy import DummyOperator
+
 from pathlib import Path
 import pandas as pd
 
 #Setting information loggers
 logging.basicConfig(
+
     level=logging.info,
+
     format='%(asctime)s - %(module)s - %(message)s',
     datefmt='%Y-%m-%d')
 
@@ -23,10 +27,12 @@ default_args = {
     'retry_delay': timedelta(minutes=5)
 }
 
+
 #Setting file paths
 sql_path= Path(__file__).resolve().parents[1]
 sql_name= 'GCUPalermo'
 path_txt=(f'./OT301-python/airflow/datasets/{sql_name}_process.txt')
+
 
 
 #Setting the extraction task
@@ -40,6 +46,7 @@ def extraccion():
         logging.info
         (f"-Exporting {sql_name}.")
         df=pg_hook.get_pandas_df(query)
+
         df.to_csv(f'./OT301-python/airflow/files/{sql_name}_select.csv', sep=',')
     except:
         logging.warning
@@ -108,6 +115,7 @@ def cargando():
     pass
 with DAG(
     dag_id='GCUPalermo_ETL_dag',
+
     default_args= default_args,
     description= 'ETL Universidad Palermo',
     schedule_interval= timedelta (hours=1),     
@@ -121,3 +129,4 @@ with DAG(
     cargando_task  = DummyOperator(task_id='cargando')
 
     extraccion_task >> transformacion_task >> cargando_task
+
