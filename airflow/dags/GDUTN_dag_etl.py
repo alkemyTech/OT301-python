@@ -8,6 +8,7 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.python import PythonOperator
+from airflow.hooks.S3_hook import S3Hook
 
 dag_name = 'GDUTN_dag_etl'
 name_university = 'GDUTN'
@@ -83,6 +84,15 @@ def transform_db():
         logging.info('Successfully transformed filee')
     except:
         logging.warning('Failure to save transformed file')
+        
+        
+def upload_to_s3(filename:str,key:str,bucket_name:str) -> None:
+    try:
+        hook = S3Hook('aws_s3_bucket')
+        hook.load_file(filename=filename,key=key,bucket_name=bucket_name,replace=True)
+        logging.info('Successful upload to S3')
+    except:
+        logging.warning('failure in the process of loading to S3')
 
 
 with DAG(dag_id=dag_name,
@@ -105,8 +115,14 @@ with DAG(dag_id=dag_name,
     )
 
     # Carga de datos en S3
-    load = DummyOperator(
-        task_id = 'carga'
+    load = PythonOperator(
+        task_id = 'carga',
+        python_callable=upload_to_s3,
+        op_kwargs={
+            'filename': f'{HOME_DIR}/OT301-python/airflow/datasets/{name_university}_process.txt',
+            'key': f'{name_university}_process.txt',
+            'bucket_name': 'cohorte-septiembre-5efe33c6'
+        }
     )
 
 extract >> transform >> load
