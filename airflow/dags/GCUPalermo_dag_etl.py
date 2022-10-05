@@ -123,7 +123,6 @@ with DAG(
     catchup=False
     ) as dag:
 
-
 #Ejecucion de tareas
     extraccion_task = PythonOperator(dag=dag, task_id='extraccion', python_callable= extraccion)
     transformacion_task = PythonOperator(dag=dag, task_id='transformacion', python_callable= transformacion)
