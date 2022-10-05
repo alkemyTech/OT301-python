@@ -84,8 +84,7 @@ def transform_db():
         logging.info('Successfully transformed filee')
     except:
         logging.warning('Failure to save transformed file')
-        
-        
+
 def upload_to_s3(filename:str,key:str,bucket_name:str) -> None:
     try:
         hook = S3Hook('aws_s3_bucket')
