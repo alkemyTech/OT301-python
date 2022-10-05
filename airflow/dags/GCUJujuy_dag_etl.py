@@ -1,11 +1,14 @@
+
 from datetime import timedelta, datetime
 from airflow import DAG
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+
 from airflow.hooks.S3_hook import S3Hook
 from boto3.exceptions import S3UploadFailedError
 from botocore.exceptions import ClientError
+
 import logging
 from pathlib import Path
 import pandas as pd
@@ -27,6 +30,7 @@ default_args = {
 #Setting information loggers
 sql_path= Path(__file__).resolve().parents[1]
 sql_name= 'GCUJujuy'
+
 path_txt=(f'./OT301-python/airflow/datasets/{sql_name}_process.txt')
 
 #Setting the extraction task
@@ -36,14 +40,18 @@ def extraccion():
         query = f.read()
         f.close()
         
+
         pg_hook = PostgresHook(postgres_conn_id='alkemy_db')
         logging.info
         (f"-Exporting {sql_name}.")
         df=pg_hook.get_pandas_df(query)
+
         df.to_csv(f'./OT301-python/airflow/files/{sql_name}_select.csv', sep=',')
+
     except:
         logging.warning
         (f"-Exporting {sql_name} did not perform as expected.")
+
 
 #Setting the transformation task    
 def transformacion():
@@ -114,6 +122,7 @@ def cargando(filename: str, key: str, bucket_name: str) -> None:
 
 with DAG(
     dag_id='GCUJujuy_ETL_dag',
+
     default_args= default_args,
     description= 'ETL Universidad Jujuy',
     schedule_interval= timedelta (hours=1),     
@@ -122,6 +131,7 @@ with DAG(
     ) as dag:
 
 #Tasks execution
+
     extraccion_task = PythonOperator(task_id='extraccion',dag=dag, python_callable= extraccion)
     transformacion_task = PythonOperator(task_id='transformacion',dag=dag, python_callable= transformacion)
     cargando_task = PythonOperator(task_id='cargando', dag=dag, python_callable=cargando,
@@ -132,3 +142,4 @@ with DAG(
     }) 
 
     extraccion_task >> transformacion_task >> cargando_task
+

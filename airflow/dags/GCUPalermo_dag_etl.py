@@ -1,3 +1,4 @@
+
 from datetime import timedelta, datetime, date
 from airflow import DAG
 from airflow.operators.dummy import DummyOperator
@@ -9,9 +10,11 @@ import pandas as pd
 
 #Setting information loggers
 logging.basicConfig(
+
     level=logging.info,
     format='%(asctime)s - %(module)s - %(message)s',
     datefmt='%Y-%m-%d')
+
 
 default_args = {
     'owner': 'airflow',
@@ -38,6 +41,7 @@ def extraccion():
         logging.info
         (f"-Exporting {sql_name}.")
         df=pg_hook.get_pandas_df(query)
+
         df.to_csv(f'./OT301-python/airflow/files/{sql_name}_select.csv', sep=',')
     except:
         logging.warning
@@ -92,12 +96,15 @@ def transformacion():
         (f"-File not found.")
         
 
+
 #Loading task, to set
 def cargando():
     logging.info("Guardando datos")   
 
 with DAG(
+
     'GCUPAlermo3_ETL_dag.py',
+
     default_args= default_args,
     description= 'ETL Universidad Palermo',
     schedule_interval= timedelta (hours=1),     
@@ -112,3 +119,4 @@ with DAG(
 
 
     extraccion_task >> transformacion_task >> cargando_task
+
