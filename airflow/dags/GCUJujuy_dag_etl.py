@@ -4,6 +4,7 @@ from airflow import DAG
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+
 from airflow.hooks.S3_hook import S3Hook
 from boto3.exceptions import S3UploadFailedError
 from botocore.exceptions import ClientError
@@ -28,7 +29,10 @@ default_args = {
 }
 #Setting information loggers
 sql_path= Path(__file__).resolve().parents[1]
-sql_name= 'GCUJujuy'
+sql_name= 'GCUJujuy'<<<<<<< OT301-63
+path_txt=(f'./OT301-python/airflow/datasets/{sql_name}_process.txt')
+
+path_txt=(f'./OT301-python/airflow/datasets/{sql_name}_process.txt')
 
 path_txt=(f'./OT301-python/airflow/datasets/{sql_name}_process.txt')
 
@@ -99,10 +103,8 @@ def transformacion():
         df_0['age']= df_0.age.apply(lambda age: age + 0 if (age < 0) else age+18)
         #lambda function is executed since table doesnt take negative values in age. 
 
-
         df_0.to_csv(f'./OT301-python/airflow/datasets/{sql_name}_process.txt', sep=',')
-
-        
+      
     except:
         logging.error
         (f"-File not found.")
@@ -117,6 +119,7 @@ def cargando(filename: str, key: str, bucket_name: str) -> None:
          logging.error('Bucket destination does not exist. Please check its name either on aws or in the code.')
     except ClientError:
         logging.error('Error connecting to Bucket. Check for Admin->Connections->aws_s3_bucket Key and SecretKey loaded data.')
+
 
 with DAG(
     dag_id='GCUJujuy_ETL_dag',
