@@ -1,10 +1,11 @@
 
-from datetime import timedelta, datetime, date
+from datetime import timedelta, datetime
 from airflow import DAG
-from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 import logging
+from airflow.operators.dummy import DummyOperator
+
 from pathlib import Path
 import pandas as pd
 
@@ -25,9 +26,12 @@ default_args = {
     'retry_delay': timedelta(minutes=5)
 }
 
-#Setting .sql path
+
+#Setting file paths
 sql_path= Path(__file__).resolve().parents[1]
 sql_name= 'GCUPalermo'
+path_txt=(f'./OT301-python/airflow/datasets/{sql_name}_process.txt')
+
 
 
 #Setting the extraction task
@@ -71,6 +75,7 @@ def transformacion():
         except:
             logging.info(f'({df_cp}) could not be loaded')
             pass
+
         #Dropping unnecessary columns
         df_0 = df_0.drop(['Unnamed: 0'], axis=1)
         
@@ -97,10 +102,44 @@ def transformacion():
         
 
 
-#Loading task, to set
-def cargando():
-    logging.info("Guardando datos")   
 
+        try:
+            
+            #Getting the missing columns from codigos_postales.csv
+
+            df_cp = pd.read_csv(f'{sql_path}/assets/codigos_postales.csv')
+            
+            df_cp.localidad = df_cp.localidad.str.lower()
+            
+            count = 0
+            for x in df_0.postal_code:
+                index_df2 = df_cp.index[df_cp['codigo_postal'] == x][0]
+                df_0.location[count] = df_cp.localidad[index_df2]
+                count = count + 1
+            
+            
+        except:
+            logging.info(f'({df_cp}) could not be loaded')
+            pass
+
+        #Age calculation for people over 18 years old. 
+        df_0['age']= pd.to_datetime(df_0['inscription_date']) - pd.to_datetime(df_0['birth_dates'])
+        df_0['age']= df_0['age'].astype(int)
+        df_0['age']= (df_0['age'] / (10**9) / 3600 / 24 /365.2425).astype(int)
+        df_0['age']= df_0.age.apply(lambda age: age + 100 if (age < 0) else age+18)
+        #Above, the lambda function is executed, and in this table, if the value is negative, gets it positive to work with it.
+
+        df_0.to_csv(f'./OT301-python/airflow/datasets/{sql_name}_process.txt', sep=',')
+    except:
+        logging.error
+        (f"-File not found.")
+        
+
+#Loading task
+
+def cargando():
+    # data load corresponding to the university received as a parameter
+    pass
 with DAG(
 
     'GCUPAlermo3_ETL_dag.py',
@@ -111,6 +150,7 @@ with DAG(
     start_date= datetime.fromisoformat('2022-09-20'), 
     catchup=False
     ) as dag:
+
 
 #Ejecucion de tareas
     extraccion_task = PythonOperator(task_id='extraccion', python_callable= extraccion)

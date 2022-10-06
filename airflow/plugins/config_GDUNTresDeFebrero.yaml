@@ -1,0 +1,5 @@
+#Configuración para univerdidad Universidad Tres de Febrero
+
+dag_name: GDUNTresDeFebrero_dag_etl
+name_university: GDUNTresDeFebrero
+description: Universidad Nacional Tres de Febrero proceso ETL

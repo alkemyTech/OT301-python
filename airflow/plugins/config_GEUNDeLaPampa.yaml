@@ -1,0 +1,7 @@
+# local data needed for the generated DAG to run smoothly
+
+dag_id: 'GEUNDeLaPampa'
+description: 'Dag etl Grupo E Universidad Nacional de La Pampa'
+# schedule_interval: '@daily'
+# catchup: False
+# input: 'ver'

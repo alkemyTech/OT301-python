@@ -29,7 +29,12 @@ default_args = {
 }
 #Setting information loggers
 sql_path= Path(__file__).resolve().parents[1]
-sql_name= 'GCUJujuy'
+sql_name= 'GCUJujuy'<<<<<<< OT301-63
+path_txt=(f'./OT301-python/airflow/datasets/{sql_name}_process.txt')
+
+path_txt=(f'./OT301-python/airflow/datasets/{sql_name}_process.txt')
+
+path_txt=(f'./OT301-python/airflow/datasets/{sql_name}_process.txt')
 
 path_txt=(f'./OT301-python/airflow/datasets/{sql_name}_process.txt')
 
@@ -51,7 +56,6 @@ def extraccion():
     except:
         logging.warning
         (f"-Exporting {sql_name} did not perform as expected.")
-
 
 #Setting the transformation task    
 def transformacion():
@@ -119,6 +123,7 @@ def cargando(filename: str, key: str, bucket_name: str) -> None:
          logging.error('Bucket destination does not exist. Please check its name either on aws or in the code.')
     except ClientError:
         logging.error('Error connecting to Bucket. Check for Admin->Connections->aws_s3_bucket Key and SecretKey loaded data.')
+
 
 with DAG(
     dag_id='GCUJujuy_ETL_dag',
