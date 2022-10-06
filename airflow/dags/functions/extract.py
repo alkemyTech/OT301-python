@@ -3,16 +3,14 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from pathlib import Path
 import logging as log
 
-logging.basicConfig(level = logging.INFO,
-                    format = " %(asctime)s - %(name)s - %(message)s",
+logging.basicConfig(level=logging.INFO,
+                    format=" %(asctime)s - %(name)s - %(message)s",
                     datefmt='%Y-%m-%d',
-                    encoding= "utf-8")
+                    encoding="utf-8")
 
+dir = Path(__file__).resolve().parent.parent.parent
+sql_path = f'{dir}/include/'
 
-
-
-sql_folder = Path(__file__).resolve().parent.parent.parent
-sql_path = f'{sql_folder}/include/'
 
 def extract(file):
     """

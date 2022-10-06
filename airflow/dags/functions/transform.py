@@ -8,7 +8,7 @@ import pandas as pd
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
 # Files
-dir = Path(__file__).resolve().parent.parent
+dir = Path(__file__).resolve().parent.parent.parent
 
 
 # We configure the registers
@@ -39,9 +39,8 @@ def transform(file):
     log.info('Creating locality column')
     df = postal_code_or_location(df, 'location')
     log.info(f'Saving file to {file}.txt')
-    df = save_df_text(df)
+    df = save_df_text(df, file)
     log.info('Saved data')
-
 
 
 def normalize(file: str) -> str:
@@ -101,7 +100,7 @@ def calculate_age(df: pd.DataFrame, file: str) -> pd.DataFrame:
         If they are negative, increment 100 years and return the division between days and years (age).
         If they are positive, it only returns the division
         """
-        days = diff_days.days
+        days = diff_days
         if days < 0:
             days += int(100 * 365.2425)
 
@@ -118,6 +117,7 @@ def calculate_age(df: pd.DataFrame, file: str) -> pd.DataFrame:
 
     df['age'] = df['age'].apply(calculate)
     return df
+
 
 
 

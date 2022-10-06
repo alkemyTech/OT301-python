@@ -10,15 +10,15 @@ logging.basicConfig(level = logging.INFO,
 
 logger = logging.getLogger('')
 
-def load(filename:str, key:str, bucket_name:str):
+def load(file_name:str, key:str, bucket_name:str):
     """
     Function that is responsible for uploading the data to amazon s3
     """
-    log.info(f'Uploading file to s3 {filename}')
+    log.info(f'Uploading file to s3 {file_name}')
     hook = S3Hook(aws_conn_id='aws_s3_bucket')
     log.info('Uploading file')
     hook.load_file(
-        filename=filename,
+        filename=file_name,
         key=key,
         bucket_name=bucket_name,
         replace=True

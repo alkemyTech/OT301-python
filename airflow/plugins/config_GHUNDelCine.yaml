@@ -1,4 +1,4 @@
 dag_id: 'Universidad_del_cine'
 sql: 'GHUNDelCine'
 file_name: 'GHUNDelCine_select'
-load_file: 'GHUNDelCine_process.txt'
+load_file: 'GHUNDelCine_select_process.txt'

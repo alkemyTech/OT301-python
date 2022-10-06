@@ -350,7 +350,7 @@ with DAG(
         dag=dag,
         python_callable=load,
         op_kwargs={
-            'filename':  f'{dir}/datasets/GHUNDelCine_process.txt',
+            'filename':f'{dir}/datasets/GHUNDelCine_process.txt',
             'key': 'GHUNDelCine_process.txt',
             'bucket_name': 'cohorte-septiembre-5efe33c6'
         }

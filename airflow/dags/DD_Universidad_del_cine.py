@@ -4,11 +4,11 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
 
-from plugins.Functions.extract import extract
-from plugins.Functions.transform import transform
-from plugins.Functions.load import load
+from functions.extract import extract
+from functions.transform import transform
+from functions.load import load
 
-dir = Path(__file__).resolve().parent
+dir = Path(__file__).resolve().parent.parent
 
 
 default_args = {
@@ -39,11 +39,11 @@ with DAG(
         task_id='Uploading_to_s3',
         python_callable=load,
         op_kwargs={
-            'file_name':f'{dir}/GHUNDelCine_process.txt',
+            'file_name':f'{dir}/datasets/GHUNDelCine_select_process.txt',
             'key': 'Universities_h.txt',
             'bucket_name': 'cohorte-septiembre-5efe33c6',
             'replace': True
             }
     )
     
-    t1 >> t2 >> t3
+t1 >> t2 >> t3

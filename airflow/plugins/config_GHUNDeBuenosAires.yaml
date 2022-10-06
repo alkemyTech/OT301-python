@@ -1,4 +1,4 @@
 dag_id: 'Universidad_de_buenos_aires'
 sql: 'GHUNDeBuenosAires'
 file_name: 'GHUNDeBuenosAires_select'
-load_file: 'GHUNDeBuenosAires_process.txt'
+load_file: 'GHUNDeBuenosAires_select_process.txt'
