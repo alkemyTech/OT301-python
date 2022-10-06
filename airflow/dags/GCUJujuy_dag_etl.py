@@ -34,6 +34,8 @@ path_txt=(f'./OT301-python/airflow/datasets/{sql_name}_process.txt')
 
 path_txt=(f'./OT301-python/airflow/datasets/{sql_name}_process.txt')
 
+path_txt=(f'./OT301-python/airflow/datasets/{sql_name}_process.txt')
+
 #Setting the extraction task
 def extraccion():
     try:
@@ -101,9 +103,8 @@ def transformacion():
         df_0['age']= df_0.age.apply(lambda age: age + 0 if (age < 0) else age+18)
         #lambda function is executed since table doesnt take negative values in age. 
 
-
         df_0.to_csv(f'./OT301-python/airflow/datasets/{sql_name}_process.txt', sep=',')
-        
+      
     except:
         logging.error
         (f"-File not found.")
@@ -140,7 +141,6 @@ with DAG(
         'key':f'{sql_name}_process.txt',
         'bucket_name':'cohorte-septiembre-5efe33c6'
     }) 
-
 
     extraccion_task >> transformacion_task >> cargando_task
 
