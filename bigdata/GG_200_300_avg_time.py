@@ -12,7 +12,7 @@ def chunkify(iterable,len_of_chunk):
 
 current_folder=os.getcwd()
 tree=ET()
-tree.parse(f'{current_folder}/posts.xml')
+tree.parse(f'{current_folder}/112010 Stack Overflow/posts.xml')
 root=tree.getroot()
 data_chunks=chunkify(root,50)
 

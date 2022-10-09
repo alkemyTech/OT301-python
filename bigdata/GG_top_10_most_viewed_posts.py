@@ -41,22 +41,22 @@ root=tree.getroot()
 data_chunks=chunkify(root,50)
 post_mapeado=list(map(mapeado,data_chunks))
 
-def set_int_tuple(data):
+def set_int_tuple(unify_list):
     lista_aux =[]
-    for dato in data:
+    for dato in unify_list:
         lista_aux.append((int(dato[0]),int(dato[1])))
     return lista_aux
 
 unify_list=(reduce(unify_chunks,post_mapeado))
 
-ordered_list=set_int_tuple(unify_list)
+int_list=set_int_tuple(unify_list)
 
-def order_list(ordered_list):
-    ordered_list=sorted(ordered_list, key=operator.itemgetter(0), reverse=True)
+def order_list(int_list):
+    ordered_list=sorted(int_list, key=operator.itemgetter(0), reverse=True)
     return ordered_list
 
-official_list=order_list(ordered_list)
+ordered_list=order_list(int_list)
 
-top_10=(official_list[0:10])
+top_10=(ordered_list[0:10])
 
 print(top_10)
