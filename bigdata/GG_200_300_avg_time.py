@@ -1,7 +1,6 @@
 from xml.etree.cElementTree import ElementTree as ET
 from functools import reduce
 from typing import Counter
-import re
 import os
 import operator
 from datetime import datetime
