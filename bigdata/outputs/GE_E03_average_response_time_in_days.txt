@@ -1,0 +1,1 @@
+Average response time in days: 34.2491
