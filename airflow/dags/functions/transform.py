@@ -7,11 +7,9 @@ from pathlib import Path
 import pandas as pd
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
-
 # Files
-dir = Path(__file__).resolve().parent.parent
-sql_path = f'{dir}/include/'
-file = 'GHUNDelCine'
+dir = Path(__file__).resolve().parent.parent.parent
+
 
 # We configure the registers
 log.basicConfig(
@@ -30,36 +28,7 @@ default_args = {
     'retry_delay': timedelta(minutes=5)
 }
 
-
-def extract():
-    """
-    Function that is responsible for extracting the data, from the include folder of the group h
-    """
-
-    # Read the sql query, which is in the include folder
-    try:
-        log.info(f'Reading file {file}.sql')
-        with open(f'{sql_path}{file}.sql', 'r') as f:
-            query = f.read()
-            f.close()
-    except Exception as e:
-        log.error(f'There was an error reading the query: {e}')
-
-    hook = PostgresHook(postgres_conn_id='alkemy_db')
-
-    # Execute query
-    log.info(f'Execute query {file}.sql')
-    pandas_df = hook.get_pandas_df(query)
-
-    # Save it as csv
-    log.info(f'Saving data in {file}.csv')
-    csv_path = f'{dir}/files/{file}_select.csv'
-    pandas_df.to_csv(csv_path, sep=',', index=False)
-
-    log.info('Extraction finished')
-
-
-def transform():
+def transform(file):
     """
     Function that is responsible for transforming the data
     """
@@ -68,9 +37,9 @@ def transform():
     log.info('Calculating age')
     df = calculate_age(df, file)
     log.info('Creating locality column')
-    df = postal_code_or_location(df, 'postal_code')
+    df = postal_code_or_location(df, 'location')
     log.info(f'Saving file to {file}.txt')
-    df = save_df_text(df)
+    df = save_df_text(df, file)
     log.info('Saved data')
 
 
@@ -81,7 +50,7 @@ def normalize(file: str) -> str:
     
     try:
         log.info(f'Normalizing csv file data from files folder {file}')
-        df = pd.read_csv(f'{dir}/files/GHUNDelCine_select.csv')
+        df = pd.read_csv(f'{dir}/files/GHUNDeBuenosAires_select.csv')
     except Exception as e:
         log.error(f'file not found: {e}')
         raise e
@@ -131,7 +100,7 @@ def calculate_age(df: pd.DataFrame, file: str) -> pd.DataFrame:
         If they are negative, increment 100 years and return the division between days and years (age).
         If they are positive, it only returns the division
         """
-        days = diff_days.days
+        days = diff_days
         if days < 0:
             days += int(100 * 365.2425)
 
@@ -152,17 +121,8 @@ def calculate_age(df: pd.DataFrame, file: str) -> pd.DataFrame:
 
 
 
+
 def postal_code_or_location(df: pd.DataFrame, postal_code_or_location: str) -> pd.DataFrame:
-    """Receives a dataframe and a string, the string defines whether to
-        add location, or postal_code, it only accepts those two values.
-
-    Args:
-        df (pd.DataFrame): DataFrame
-        postal_code_or_location (str): location or postal_code
-
-    Returns:
-        pd.DataFrame: Return the dataframe
-    """
     try:
         log.info('Reading zip code file from assets folder')
         open_data = pd.read_csv(f'{dir}/assets/codigos_postales.csv')
@@ -184,7 +144,7 @@ def postal_code_or_location(df: pd.DataFrame, postal_code_or_location: str) -> p
     return df
 
 
-def save_df_text(df):
+def save_df_text(df, file):
     """
     Save the dataframe in txt format. in the datasets folder
     """
@@ -195,57 +155,3 @@ def save_df_text(df):
             f.close()
     except OSError as e:
         log.error(f'Directory not found: {e}')
-
-
-
-
-def load(filename:str, key:str, bucket_name:str):
-    """
-    Function that is responsible for uploading the data to amazon s3
-    """
-    log.info(f'Uploading file to s3 {filename}')
-    hook = S3Hook(aws_conn_id='aws_s3_bucket')
-    log.info('Uploading file')
-    hook.load_file(
-        filename=filename,
-        key=key,
-        bucket_name=bucket_name,
-        replace=True
-    )
-    log.info('File uploaded to s3 successfully')
-
-
-with DAG(
-        'University_Of_Cinema',  # Dagger name
-        default_args=default_args,  # This will automatically apply it to any operators bound to it
-        description='ETL DAG for University H data',  # Dags description
-        start_date=datetime(2022, 9, 20),  # Dag boot date
-        schedule=timedelta(hours=1),  # The dag is going to run every 1 hour
-        catchup=False
-
-) as dag:
-    t1 = PythonOperator(
-        task_id='Get_data',
-        dag=dag,
-        python_callable=extract
-
-    )
-
-    t2 = PythonOperator(
-        task_id='transforming_data',
-        dag=dag,
-        python_callable=transform
-    )
-
-    t3 = PythonOperator(
-        task_id='Uploading_to_s3',
-        dag=dag,
-        python_callable=load,
-        op_kwargs={
-            'filename':f'{dir}/datasets/GHUNDelCine_process.txt',
-            'key': 'GHUNDelCine_process.txt',
-            'bucket_name': 'cohorte-septiembre-5efe33c6'
-        }
-    )
-
-t1 >> t2 >> t3
