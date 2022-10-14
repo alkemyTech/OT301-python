@@ -1,0 +1,11 @@
+official_name: 'GGFLCSociales'
+date_format: 'DD-MM-YYYY'
+postgreshook_con_id: 'alkemy_db'
+database_name: 'training'
+univ: 'Sociales'
+s3hook_conn_id: 'aws_s3_bucket'
+dag_id: 'GGFLCSociales_dag_dinamico'
+dag_description: 'Dag para la Facultad Latinoamericana de Ciencias Sociales'
+schedule: timedelta(hours=1)
+bucket_name: 'cohorte-septiembre-5efe33c6'
+missing_data: 'postal_code'

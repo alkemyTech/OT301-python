@@ -1,0 +1,4 @@
+sql_name: GCUJujuy
+postgres_conn_id: alkemy_db
+aws_conn_id: aws_s3_bucket
+description: ETL Universidad Jujuy

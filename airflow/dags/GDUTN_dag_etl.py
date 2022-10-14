@@ -14,6 +14,7 @@ dag_name = 'GDUTN_dag_etl'
 name_university = 'GDUTN'
 HOME_DIR = Path.home()
 
+
 # Configuración de Logging
 logging.basicConfig(format=f'%(asctime)s - {dag_name} - %(message)s', datefmt='%Y-%m-%d', level=logging.INFO)
 
@@ -36,6 +37,7 @@ def extract_db():
         logging.info('Successful extraction')
     except:
         logging.warning('Failure in the extraction process')
+
 
 def transform_db():
     try:
@@ -82,7 +84,7 @@ def transform_db():
         logging.info('Successfully transformed filee')
     except:
         logging.warning('Failure to save transformed file')
-    
+
 def upload_to_s3(filename:str,key:str,bucket_name:str) -> None:
     try:
         hook = S3Hook('aws_s3_bucket')
@@ -91,6 +93,14 @@ def upload_to_s3(filename:str,key:str,bucket_name:str) -> None:
     except:
         logging.warning('failure in the process of loading to S3')
 
+
+def upload_to_s3(filename:str,key:str,bucket_name:str) -> None:
+    try:
+        hook = S3Hook('aws_s3_bucket')
+        hook.load_file(filename=filename,key=key,bucket_name=bucket_name,replace=True)
+        logging.info('Successful upload to S3')
+    except:
+        logging.warning('failure in the process of loading to S3')
 
 
 with DAG(dag_id=dag_name,
