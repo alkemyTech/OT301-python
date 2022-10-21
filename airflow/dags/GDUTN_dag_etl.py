@@ -94,6 +94,15 @@ def upload_to_s3(filename:str,key:str,bucket_name:str) -> None:
         logging.warning('failure in the process of loading to S3')
 
 
+def upload_to_s3(filename:str,key:str,bucket_name:str) -> None:
+    try:
+        hook = S3Hook('aws_s3_bucket')
+        hook.load_file(filename=filename,key=key,bucket_name=bucket_name,replace=True)
+        logging.info('Successful upload to S3')
+    except:
+        logging.warning('failure in the process of loading to S3')
+
+
 with DAG(dag_id=dag_name,
         description='Universidad Tecnolgogica Nacional proceso ETL',
         start_date=datetime(2022,9,19),

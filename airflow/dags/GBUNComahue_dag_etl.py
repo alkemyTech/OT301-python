@@ -59,14 +59,14 @@ def transform():
     
     #Genero los datos de la columna 'age'
     df['age'] = pd.to_datetime(df.inscription_date) - pd.to_datetime(df.fecha_nacimiento)
-    df['age']=df.age.astype(int)
+    df['age'] = df.age.astype(int)
     df['age'] = (df.age / (10**9) / 3600 / 24 /365.2425).astype(int)
                 #nanoseg   a seg   a h    a d   a años
     
     #Genero el df con el csv de los códigos postales (acá limpiar duplicados perjudica)
     df2 = pd.read_csv(path_dags.replace('/dags',f'/assets/codigos_postales.csv'))
     df2.localidad = df2.localidad.str.lower()
-    #Completo los códigos postales sabiendo la localidad
+    #Completo la localidad sabiendo los códigos postales
     count = 0
     for x in df.postal_code:
         index_df2 = df2.index[df2['codigo_postal'] == x][0]
@@ -78,7 +78,7 @@ def transform():
     logging.info('Processed data')
 
     #Exporto los resultados a la carpeta y en el formato solicitado
-    with open(path_dags.replace('/dags',f'/datasets/{name_un}_process.txt'), 'a') as f:
+    with open(path_dags.replace('/dags',f'/datasets/{name_un}_process.txt'), 'w') as f:
         dfAsString = df.to_string(header=True, index=False)
         f.write(dfAsString)
         f.close()
