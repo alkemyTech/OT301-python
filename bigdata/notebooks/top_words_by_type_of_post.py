@@ -1,6 +1,6 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
-import os 
+import os
 import xml.etree.ElementTree as ET
 import operator
 import pandas as pd
@@ -17,7 +17,6 @@ if __name__ == '__main__':
             yield iterable[i:i + len_of_chunk]
 
 
-
     def words_by_type(data):
         post_type = data.attrib['PostTypeId']
         body = data.attrib['Body']
@@ -29,14 +28,15 @@ if __name__ == '__main__':
         return post_type, words
 
     def separate_by_type(data):
-        return dict([[postid, data[1].copy()]for postid in data[0]])
+        return dict([[postid, data[1].copy()] for postid in data[0]])
+
 
     def reduce_counters(data1, data2):
         for key, value in data2.items():
             if key in data1.keys():
                 data1[key].update(data2[key])
             else:
-                data1.update({key:value})
+                data1.update({key: value})
             return data1
 
     def get_top10(data):
@@ -54,12 +54,12 @@ if __name__ == '__main__':
 
     # xml file path
     file_xml = os.path.join(root_path, 'bigdata/datasets/posts.xml')
-    #output = os.path.join(root_path, '../outputs/')
+    # output = os.path.join(root_path, '../outputs/')
 
     # Read posts.xml file
     tree = ET.parse(file_xml)
     root = tree.getroot()
-        
+
     data_chunks = chunckify(root, 50)
 
     mapped = list(map(mapper, data_chunks))
