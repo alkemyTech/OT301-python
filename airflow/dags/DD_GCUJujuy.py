@@ -54,6 +54,7 @@ def extraccion():
 def transformacion():
         
 #Reading .csv files
+
     try:
         df_0 = pd.read_csv(f'./OT301-python/airflow/files/{sql_name}_select.csv', sep=',')
         
